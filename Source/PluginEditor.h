@@ -29,5 +29,9 @@ private:
     // access the processor object that created it.
     AnimalSynthAudioProcessor& audioProcessor;
 
+    juce::ComboBox waveformSelector;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
+
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessorEditor)
 };

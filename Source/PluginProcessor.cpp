@@ -12,14 +12,22 @@
 //==============================================================================
 AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(
+        BusesProperties()
+#if !JucePlugin_IsMidiEffect
+#if !JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    ),
+    parameters(*this, nullptr, "PARAMETERS", {
+        std::make_unique<juce::AudioParameterChoice>(
+            "waveform", "Waveform",
+            juce::StringArray { "Sine", "Saw", "Square", "Triangle" },
+            0
+        )
+        })
 #endif
 {
 }
@@ -97,7 +105,21 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     // initialisation that you need..
 
     currentSampleRate = sampleRate;
-    angleDelta = juce::MathConstants<double>::twoPi * frequency / currentSampleRate;
+    phase = 0.0;
+    phaseIncrement = frequency / currentSampleRate;
+
+    int waveformIndex = *parameters.getRawParameterValue("waveform");
+    std::cout << waveformIndex;
+
+    // Choose waveform function ONCE
+    switch (static_cast<WaveformType>(waveformIndex))
+    {
+    case WaveformType::Sine:    currentWaveformFunction = generateSine; break;
+    case WaveformType::Saw:     currentWaveformFunction = generateSaw; break;
+    case WaveformType::Square:  currentWaveformFunction = generateSquare; break;
+    case WaveformType::Triangle:currentWaveformFunction = generateTriangle; break;
+    default:                    currentWaveformFunction = generateSine; break;
+    }
 }
 
 void AnimalSynthAudioProcessor::releaseResources()
@@ -138,6 +160,24 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    int currentWaveformIndex = *parameters.getRawParameterValue("waveform");
+
+    if (currentWaveformIndex != lastWaveformIndex)
+    {
+        lastWaveformIndex = currentWaveformIndex;
+
+        switch (static_cast<WaveformType>(currentWaveformIndex))
+        {
+        case WaveformType::Sine:     currentWaveformFunction = generateSine; break;
+        case WaveformType::Saw:      currentWaveformFunction = generateSaw; break;
+        case WaveformType::Square:   currentWaveformFunction = generateSquare; break;
+        case WaveformType::Triangle: currentWaveformFunction = generateTriangle; break;
+        default:                     currentWaveformFunction = generateSine; break;
+        }
+    }
+
+
+
     buffer.clear();
 
     auto numChannels = buffer.getNumChannels();
@@ -145,12 +185,16 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     for (int sample = 0; sample < numSamples; ++sample)
     {
-        float currentSample = std::sin(currentAngle);
-        currentAngle += angleDelta;
+        float sampleValue = currentWaveformFunction(phase);
+
+        // Advance phase
+        phase += phaseIncrement;
+        if (phase >= 1.0)
+            phase -= 1.0;
 
         for (int channel = 0; channel < numChannels; ++channel)
         {
-            buffer.setSample(channel, sample, currentSample);
+            buffer.setSample(channel, sample, sampleValue);
         }
     }
 }
@@ -185,4 +229,25 @@ void AnimalSynthAudioProcessor::setStateInformation (const void* data, int sizeI
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AnimalSynthAudioProcessor();
+}
+
+
+float AnimalSynthAudioProcessor::generateSine(double phase)
+{
+    return std::sin(juce::MathConstants<double>::twoPi * phase);
+}
+
+float AnimalSynthAudioProcessor::generateSaw(double phase)
+{
+    return static_cast<float>(2.0 * (phase - 0.5));
+}
+
+float AnimalSynthAudioProcessor::generateSquare(double phase)
+{
+    return phase < 0.5 ? 1.0f : -1.0f;
+}
+
+float AnimalSynthAudioProcessor::generateTriangle(double phase)
+{
+    return static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
 }

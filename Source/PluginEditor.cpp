@@ -16,6 +16,16 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (400, 300);
+
+    waveformSelector.addItem("Sine", 1);
+    waveformSelector.addItem("Saw", 2);
+    waveformSelector.addItem("Square", 3);
+    waveformSelector.addItem("Triangle", 4);
+    addAndMakeVisible(waveformSelector);
+
+    waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "waveform", waveformSelector);
+
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
@@ -37,4 +47,6 @@ void AnimalSynthAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+
+    waveformSelector.setBounds(10, 10, 150, 25);
 }

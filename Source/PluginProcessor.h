@@ -53,12 +53,37 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+
+
+    juce::AudioProcessorValueTreeState parameters;
+    int lastWaveformIndex = -1;
+
 private:
 
-    double currentAngle = 0.0;
-    double angleDelta = 0.0;
+    
+
+    //=============================================================================
+    enum class WaveformType
+    {
+        Sine,
+        Saw,
+        Square,
+        Triangle
+    };
+
+    //WaveformType waveformType = WaveformType::Square;
+    using WaveformFunction = float(*)(double);
+    WaveformFunction currentWaveformFunction = nullptr;
+
     double currentSampleRate = 44100.0;
-    double frequency = 440.0; // A4
+    double frequency = 440.0;
+    double phase = 0.0;
+    double phaseIncrement = 0.0;
+
+    static float generateSine(double phase);
+    static float generateSaw(double phase);
+    static float generateSquare(double phase);
+    static float generateTriangle(double phase);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessor)
