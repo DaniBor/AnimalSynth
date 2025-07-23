@@ -95,6 +95,9 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+
+    currentSampleRate = sampleRate;
+    angleDelta = juce::MathConstants<double>::twoPi * frequency / currentSampleRate;
 }
 
 void AnimalSynthAudioProcessor::releaseResources()
@@ -135,26 +138,20 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    buffer.clear();
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    auto numChannels = buffer.getNumChannels();
+    auto numSamples = buffer.getNumSamples();
+
+    for (int sample = 0; sample < numSamples; ++sample)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        float currentSample = std::sin(currentAngle);
+        currentAngle += angleDelta;
 
-        // ..do something to the data...
+        for (int channel = 0; channel < numChannels; ++channel)
+        {
+            buffer.setSample(channel, sample, currentSample);
+        }
     }
 }
 

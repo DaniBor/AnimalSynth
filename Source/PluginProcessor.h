@@ -54,6 +54,12 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
+
+    double currentAngle = 0.0;
+    double angleDelta = 0.0;
+    double currentSampleRate = 44100.0;
+    double frequency = 440.0; // A4
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessor)
 };
