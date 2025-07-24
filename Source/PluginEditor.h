@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "ScaledVisualizerComponent.h"
 
 //==============================================================================
 /**
@@ -24,7 +25,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    juce::AudioVisualiserComponent audioScope{ 1 }; // 1 channel (mono)
+    std::unique_ptr<ScaledVisualiserComponent> audioScope;
 
 private:
     // This reference is provided as a quick way for your editor to

@@ -76,7 +76,7 @@ private:
     WaveformFunction currentWaveformFunction = nullptr;
 
     double currentSampleRate = 44100.0;
-    double frequency = 100.0;
+    double frequency = 1000;
     double phase = 0.0;
     double phaseIncrement = 0.0;
 

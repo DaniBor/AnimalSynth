@@ -4,6 +4,8 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
+      <FILE id="SHlpGI" name="ScaledVisualizerComponent.h" compile="0" resource="0"
+            file="Source/ScaledVisualizerComponent.h"/>
       <FILE id="b4e5Vj" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="TILaZv" name="PluginProcessor.h" compile="0" resource="0"

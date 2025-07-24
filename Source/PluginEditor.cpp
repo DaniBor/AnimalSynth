@@ -15,6 +15,9 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+
+    audioScope = std::make_unique<ScaledVisualiserComponent>(2048);
+
     setSize (400, 300);
 
     waveformSelector.addItem("Sine", 1);
@@ -26,16 +29,14 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "waveform", waveformSelector);
 
-    audioScope.setBufferSize(128);           // samples shown at once
-    audioScope.setSamplesPerBlock(16);       // number of samples pushed each block
-    audioScope.setColours(juce::Colours::black, juce::Colours::lime);
+    
 
-    audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& buffer)
+    audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
         {
-            audioScope.pushBuffer(buffer);
+            audioScope->pushBuffer(b);
         };
 
-    addAndMakeVisible(audioScope);
+    addAndMakeVisible(*audioScope);
 
 }
 
@@ -60,5 +61,5 @@ void AnimalSynthAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
     waveformSelector.setBounds(10, 10, 150, 25);
-    audioScope.setBounds(10, 50, getWidth() - 20, getHeight() - 60);
+    audioScope->setBounds(10, 40, getWidth() - 20, 75);
 }
