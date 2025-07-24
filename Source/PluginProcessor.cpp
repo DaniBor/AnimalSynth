@@ -197,6 +197,10 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
             buffer.setSample(channel, sample, sampleValue);
         }
     }
+
+    if (pushAudioToScope)
+        pushAudioToScope(buffer);
+
 }
 
 //==============================================================================

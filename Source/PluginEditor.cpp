@@ -26,6 +26,17 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "waveform", waveformSelector);
 
+    audioScope.setBufferSize(128);           // samples shown at once
+    audioScope.setSamplesPerBlock(16);       // number of samples pushed each block
+    audioScope.setColours(juce::Colours::black, juce::Colours::lime);
+
+    audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& buffer)
+        {
+            audioScope.pushBuffer(buffer);
+        };
+
+    addAndMakeVisible(audioScope);
+
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
@@ -49,4 +60,5 @@ void AnimalSynthAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
     waveformSelector.setBounds(10, 10, 150, 25);
+    audioScope.setBounds(10, 50, getWidth() - 20, getHeight() - 60);
 }

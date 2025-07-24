@@ -53,7 +53,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-
+    std::function<void(const juce::AudioBuffer<float>&)> pushAudioToScope;
 
     juce::AudioProcessorValueTreeState parameters;
     int lastWaveformIndex = -1;
@@ -76,7 +76,7 @@ private:
     WaveformFunction currentWaveformFunction = nullptr;
 
     double currentSampleRate = 44100.0;
-    double frequency = 440.0;
+    double frequency = 100.0;
     double phase = 0.0;
     double phaseIncrement = 0.0;
 
@@ -84,6 +84,8 @@ private:
     static float generateSaw(double phase);
     static float generateSquare(double phase);
     static float generateTriangle(double phase);
+
+    
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessor)
