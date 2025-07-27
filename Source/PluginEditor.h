@@ -26,6 +26,10 @@ public:
     void resized() override;
 
     std::unique_ptr<ScaledVisualiserComponent> audioScope;
+    juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
+
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    std::unique_ptr<SliderAttachment> attackAttachment, decayAttachment, sustainAttachment, releaseAttachment;
 
 private:
     // This reference is provided as a quick way for your editor to

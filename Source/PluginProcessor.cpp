@@ -26,7 +26,11 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "waveform", "Waveform",
             juce::StringArray { "Sine", "Saw", "Square", "Triangle" },
             0
-        )
+        ),
+        std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 5.0f, 0.1f),
+        std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 5.0f, 0.2f),
+        std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
+        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f)
         })
 #endif
 {
@@ -106,7 +110,17 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     currentSampleRate = sampleRate;
     phase = 0.0;
-    phaseIncrement = frequency / currentSampleRate;
+
+    currentSampleRate = sampleRate;
+
+    adsrParams.attack = *parameters.getRawParameterValue("attack");
+    adsrParams.decay = *parameters.getRawParameterValue("decay");
+    adsrParams.sustain = *parameters.getRawParameterValue("sustain");
+    adsrParams.release = *parameters.getRawParameterValue("release");
+    adsr.setParameters(adsrParams);
+
+    adsr.setSampleRate(currentSampleRate);
+
 
     int waveformIndex = *parameters.getRawParameterValue("waveform");
     std::cout << waveformIndex;
@@ -180,26 +194,62 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     buffer.clear();
 
+    adsrParams.attack = *parameters.getRawParameterValue("attack");
+    adsrParams.decay = *parameters.getRawParameterValue("decay");
+    adsrParams.sustain = *parameters.getRawParameterValue("sustain");
+    adsrParams.release = *parameters.getRawParameterValue("release");
+
+    adsr.setParameters(adsrParams);
+
+
+    for (const auto metadata : midiMessages)
+    {
+        const auto msg = metadata.getMessage();
+
+        if (msg.isNoteOn())
+        {
+            midiNote = msg.getNoteNumber();
+            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
+
+            phaseIncrement = freq / currentSampleRate;
+            phase = 0.0; // Optional: restart waveform on note-on
+            adsr.noteOn();
+            noteIsOn = true;
+        }
+        else if (msg.isNoteOff())
+        {
+            if (msg.getNoteNumber() == midiNote)
+            {
+                adsr.noteOff();
+                noteIsOn = false;
+            }
+        }
+    }
+
     auto numChannels = buffer.getNumChannels();
     auto numSamples = buffer.getNumSamples();
 
     for (int sample = 0; sample < numSamples; ++sample)
     {
-        float sampleValue = currentWaveformFunction(phase);
+        float env = adsr.getNextSample();
+        float currentSample = 0.0f;
 
-        // Advance phase
-        phase += phaseIncrement;
-        if (phase >= 1.0)
-            phase -= 1.0;
+        if (adsr.isActive())
+        {
+            currentSample = currentWaveformFunction(phase) * env;
+            phase += phaseIncrement;
+            if (phase >= 1.0)
+                phase -= 1.0;
+        }
 
         for (int channel = 0; channel < numChannels; ++channel)
-        {
-            buffer.setSample(channel, sample, sampleValue);
-        }
+            buffer.setSample(channel, sample, currentSample);
     }
 
-    if (pushAudioToScope)
-        pushAudioToScope(buffer);
+    /*if (pushAudioToScope)
+        pushAudioToScope(buffer);*/
+
+	midiMessages.clear();
 
 }
 

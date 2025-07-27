@@ -58,6 +58,10 @@ public:
     juce::AudioProcessorValueTreeState parameters;
     int lastWaveformIndex = -1;
 
+    juce::ADSR adsr;
+    juce::ADSR::Parameters adsrParams;
+
+
 private:
 
     
@@ -76,9 +80,10 @@ private:
     WaveformFunction currentWaveformFunction = nullptr;
 
     double currentSampleRate = 44100.0;
-    double frequency = 1000;
     double phase = 0.0;
     double phaseIncrement = 0.0;
+    int midiNote = -1;
+    bool noteIsOn = false;
 
     static float generateSine(double phase);
     static float generateSaw(double phase);

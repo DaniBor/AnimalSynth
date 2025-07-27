@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="rHAzQu" name="AnimalSynth" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20"
+              pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
       <FILE id="SHlpGI" name="ScaledVisualizerComponent.h" compile="0" resource="0"

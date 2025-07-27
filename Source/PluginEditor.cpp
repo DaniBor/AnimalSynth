@@ -16,7 +16,7 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
-    audioScope = std::make_unique<ScaledVisualiserComponent>(2048);
+    //audioScope = std::make_unique<ScaledVisualiserComponent>(2048);
 
     setSize (400, 300);
 
@@ -31,12 +31,36 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     
 
+    auto styleKnob = [](juce::Slider& s)
+        {
+            s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+            s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+        };
+
+    styleKnob(attackSlider); addAndMakeVisible(attackSlider);
+    styleKnob(decaySlider);  addAndMakeVisible(decaySlider);
+    styleKnob(sustainSlider); addAndMakeVisible(sustainSlider);
+    styleKnob(releaseSlider); addAndMakeVisible(releaseSlider);
+
+    auto& par = audioProcessor.parameters;
+
+    attackAttachment = std::make_unique<SliderAttachment>(par, "attack", attackSlider);
+    decayAttachment = std::make_unique<SliderAttachment>(par, "decay", decaySlider);
+    sustainAttachment = std::make_unique<SliderAttachment>(par, "sustain", sustainSlider);
+    releaseAttachment = std::make_unique<SliderAttachment>(par, "release", releaseSlider);
+
+
+
+
+
+
+    /*
     audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
         {
             audioScope->pushBuffer(b);
         };
 
-    addAndMakeVisible(*audioScope);
+    addAndMakeVisible(*audioScope);*/
 
 }
 
@@ -61,5 +85,15 @@ void AnimalSynthAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
     waveformSelector.setBounds(10, 10, 150, 25);
-    audioScope->setBounds(10, 40, getWidth() - 20, 75);
+    //audioScope->setBounds(10, 40, getWidth() - 20, 75);
+
+
+    auto bounds = getLocalBounds().reduced(10);
+    auto row = bounds.removeFromBottom(100);
+
+    attackSlider.setBounds(row.removeFromLeft(100));
+    decaySlider.setBounds(row.removeFromLeft(100));
+    sustainSlider.setBounds(row.removeFromLeft(100));
+    releaseSlider.setBounds(row.removeFromLeft(100));
+
 }
