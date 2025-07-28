@@ -20,10 +20,11 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     setSize (400, 300);
 
-    waveformSelector.addItem("Sine", 1);
-    waveformSelector.addItem("Saw", 2);
-    waveformSelector.addItem("Square", 3);
-    waveformSelector.addItem("Triangle", 4);
+    waveformSelector.addItem("Howl (Sine)", 1);
+    waveformSelector.addItem("Growl (Saw)", 2);
+    waveformSelector.addItem("Croak (Square)", 3);
+    waveformSelector.addItem("Chirp (Triangle)", 4);
+    waveformSelector.onChange = [this] { updateEffectUI(); };
     addAndMakeVisible(waveformSelector);
 
     waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -37,6 +38,8 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
             s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
         };
 
+
+
     styleKnob(attackSlider); addAndMakeVisible(attackSlider);
     styleKnob(decaySlider);  addAndMakeVisible(decaySlider);
     styleKnob(sustainSlider); addAndMakeVisible(sustainSlider);
@@ -49,8 +52,13 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     sustainAttachment = std::make_unique<SliderAttachment>(par, "sustain", sustainSlider);
     releaseAttachment = std::make_unique<SliderAttachment>(par, "release", releaseSlider);
 
+    addAndMakeVisible(sineFXPanel);
+    addAndMakeVisible(sawFXPanel);
+    addAndMakeVisible(squareFXPanel);
+    addAndMakeVisible(triangleFXPanel);
 
 
+    setupEffectPanels();
 
 
 
@@ -73,10 +81,6 @@ void AnimalSynthAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (15.0f));
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
 }
 
 void AnimalSynthAudioProcessorEditor::resized()
@@ -84,16 +88,108 @@ void AnimalSynthAudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
 
-    waveformSelector.setBounds(10, 10, 150, 25);
+    auto bounds = getLocalBounds().reduced(10);
+    auto header = bounds.removeFromTop(40);
+
+    waveformSelector.setBounds(header.removeFromLeft(200));
+
+    sineFXPanel.setBounds(bounds);
+    sawFXPanel.setBounds(bounds);
+    squareFXPanel.setBounds(bounds);
+    triangleFXPanel.setBounds(bounds);
     //audioScope->setBounds(10, 40, getWidth() - 20, 75);
 
 
-    auto bounds = getLocalBounds().reduced(10);
-    auto row = bounds.removeFromBottom(100);
+    // Reserve bottom area for ADSR (e.g., 120 px high)
+    auto adsrArea = bounds.removeFromBottom(80);
 
-    attackSlider.setBounds(row.removeFromLeft(100));
-    decaySlider.setBounds(row.removeFromLeft(100));
-    sustainSlider.setBounds(row.removeFromLeft(100));
-    releaseSlider.setBounds(row.removeFromLeft(100));
+    // Layout ADSR sliders in adsrArea
+    auto sliderZoneWidth = adsrArea.getWidth() / 4;
+
+    for (auto* slider : { &attackSlider, &decaySlider, &sustainSlider, &releaseSlider })
+    {
+        auto zone = adsrArea.removeFromLeft(sliderZoneWidth);
+        slider->setBounds(zone.withSizeKeepingCentre(60, 80)); // smaller knob
+    }
+
+    // Remaining "bounds" is now for FX panel
+    sineFXPanel.setBounds(bounds);
+    sawFXPanel.setBounds(bounds);
+    squareFXPanel.setBounds(bounds);
+    triangleFXPanel.setBounds(bounds);
+
+    // Define consistent slider size and padding
+    const int fxSliderSize = 80;
+    const int fxSliderPadding = 30;
+
+    // Position sliders at top-left corner of their respective panels
+    auto topLeft = juce::Rectangle<int>(fxSliderPadding, fxSliderPadding, fxSliderSize, fxSliderSize);
+
+    sineSlider.setBounds(topLeft);
+    sawSlider.setBounds(topLeft);
+    squareSlider.setBounds(topLeft);
+    triangleSlider.setBounds(topLeft);
+
+
+
 
 }
+
+void AnimalSynthAudioProcessorEditor::updateEffectUI()
+{
+    sineFXPanel.setVisible(false);
+    sawFXPanel.setVisible(false);
+    squareFXPanel.setVisible(false);
+    triangleFXPanel.setVisible(false);
+
+    switch (waveformSelector.getSelectedId())
+    {
+    case 1: sineFXPanel.setVisible(true); break;
+    case 2: sawFXPanel.setVisible(true); break;
+    case 3: squareFXPanel.setVisible(true); break;
+    case 4: triangleFXPanel.setVisible(true); break;
+    }
+
+    repaint();
+}
+
+
+void AnimalSynthAudioProcessorEditor::setupEffectPanels()
+{
+    // Sine Panel
+    sineSlider.setSliderStyle(juce::Slider::Rotary);
+    sineSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sineLabel.setText("Chorus Depth", juce::dontSendNotification);
+    sineLabel.attachToComponent(&sineSlider, false);
+    sineFXPanel.addAndMakeVisible(sineSlider);
+    sineFXPanel.addAndMakeVisible(sineLabel);
+
+    // Saw Panel
+    sawSlider.setSliderStyle(juce::Slider::Rotary);
+    sawSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawLabel.setText("Distortion Drive", juce::dontSendNotification);
+    sawLabel.attachToComponent(&sawSlider, false);
+    sawFXPanel.addAndMakeVisible(sawSlider);
+    sawFXPanel.addAndMakeVisible(sawLabel);
+
+    // Square Panel
+    squareSlider.setSliderStyle(juce::Slider::Rotary);
+    squareSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    squareLabel.setText("Croak Rate", juce::dontSendNotification);
+    squareLabel.attachToComponent(&squareSlider, false);
+    squareFXPanel.addAndMakeVisible(squareSlider);
+    squareFXPanel.addAndMakeVisible(squareLabel);
+
+    // Triangle Panel
+    triangleSlider.setSliderStyle(juce::Slider::Rotary);
+    triangleSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triangleLabel.setText("Reverb Mix", juce::dontSendNotification);
+    triangleLabel.attachToComponent(&triangleSlider, false);
+    triangleFXPanel.addAndMakeVisible(triangleSlider);
+    triangleFXPanel.addAndMakeVisible(triangleLabel);
+
+
+    updateEffectUI();
+}
+
+

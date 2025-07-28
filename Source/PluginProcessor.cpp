@@ -27,8 +27,8 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             juce::StringArray { "Sine", "Saw", "Square", "Triangle" },
             0
         ),
-        std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 5.0f, 0.1f),
-        std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 5.0f, 0.2f),
+        std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 1.0f, 0.1f),
+        std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 1.0f, 0.2f),
         std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
         std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f)
         })

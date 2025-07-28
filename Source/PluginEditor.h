@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "ScaledVisualizerComponent.h"
+#include "BorderedPanel.h"
 
 //==============================================================================
 /**
@@ -31,6 +32,24 @@ public:
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     std::unique_ptr<SliderAttachment> attackAttachment, decayAttachment, sustainAttachment, releaseAttachment;
 
+
+	void updateEffectUI();
+    void setupEffectPanels();
+
+    // Dummy sliders + labels per panel
+    juce::Slider sineSlider;
+    juce::Label  sineLabel;
+
+    juce::Slider sawSlider;
+    juce::Label  sawLabel;
+
+    juce::Slider squareSlider;
+    juce::Label  squareLabel;
+
+    juce::Slider triangleSlider;
+    juce::Label  triangleLabel;
+
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -38,8 +57,14 @@ private:
 
     juce::ComboBox waveformSelector;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
-
+    BorderedPanel sineFXPanel;
+    BorderedPanel sawFXPanel;
+    BorderedPanel squareFXPanel;
+    BorderedPanel triangleFXPanel;
     
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessorEditor)
 };
+
+
+
