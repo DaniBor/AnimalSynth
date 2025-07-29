@@ -30,7 +30,9 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
         std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 1.0f, 0.1f),
         std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 1.0f, 0.2f),
         std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
-        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f)
+        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f),
+        std::make_unique<juce::AudioParameterFloat>("vibratoRate", "Vibrato Rate", 0.1f, 10.0f, 5.0f),
+        std::make_unique<juce::AudioParameterFloat>("vibratoDepth", "Vibrato Depth", 0.0f, 0.02f, 0.005f)
         })
 #endif
 {
@@ -110,8 +112,7 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     currentSampleRate = sampleRate;
     phase = 0.0;
-
-    currentSampleRate = sampleRate;
+    vibratoPhase = 0.0;
 
     adsrParams.attack = *parameters.getRawParameterValue("attack");
     adsrParams.decay = *parameters.getRawParameterValue("decay");
@@ -120,6 +121,21 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     adsr.setParameters(adsrParams);
 
     adsr.setSampleRate(currentSampleRate);
+
+
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = currentSampleRate;
+    spec.maximumBlockSize = static_cast<juce::uint32> (getBlockSize());
+    spec.numChannels = getTotalNumOutputChannels();
+
+    sineFilter.reset();
+    sineFilter.prepare(spec);
+    sineFilter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
+    sineFilter.setCutoffFrequency(1000.0f);
+    sineFilter.setResonance(0.3f);
+
+
+
 
 
     int waveformIndex = *parameters.getRawParameterValue("waveform");
@@ -202,49 +218,20 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     adsr.setParameters(adsrParams);
 
 
-    for (const auto metadata : midiMessages)
+    
+
+    
+
+    switch (static_cast<WaveformType>(currentWaveformIndex))
     {
-        const auto msg = metadata.getMessage();
-
-        if (msg.isNoteOn())
-        {
-            midiNote = msg.getNoteNumber();
-            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
-
-            phaseIncrement = freq / currentSampleRate;
-            phase = 0.0; // Optional: restart waveform on note-on
-            adsr.noteOn();
-            noteIsOn = true;
-        }
-        else if (msg.isNoteOff())
-        {
-            if (msg.getNoteNumber() == midiNote)
-            {
-                adsr.noteOff();
-                noteIsOn = false;
-            }
-        }
+        case WaveformType::Sine: processSineWave(buffer, midiMessages); break;
+        case WaveformType::Saw: processSawWave(buffer, midiMessages); break;
+        case WaveformType::Square: processSquareWave(buffer, midiMessages); break;
+        case WaveformType::Triangle: processTriangleWave(buffer, midiMessages); break;
+        default: buffer.clear(); break;
     }
 
-    auto numChannels = buffer.getNumChannels();
-    auto numSamples = buffer.getNumSamples();
-
-    for (int sample = 0; sample < numSamples; ++sample)
-    {
-        float env = adsr.getNextSample();
-        float currentSample = 0.0f;
-
-        if (adsr.isActive())
-        {
-            currentSample = currentWaveformFunction(phase) * env;
-            phase += phaseIncrement;
-            if (phase >= 1.0)
-                phase -= 1.0;
-        }
-
-        for (int channel = 0; channel < numChannels; ++channel)
-            buffer.setSample(channel, sample, currentSample);
-    }
+    
 
     /*if (pushAudioToScope)
         pushAudioToScope(buffer);*/
@@ -304,4 +291,104 @@ float AnimalSynthAudioProcessor::generateSquare(double phase)
 float AnimalSynthAudioProcessor::generateTriangle(double phase)
 {
     return static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
+}
+
+void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+{
+
+    // Read current vibrato settings
+    vibratoRate = *parameters.getRawParameterValue("vibratoRate");
+    vibratoDepth = *parameters.getRawParameterValue("vibratoDepth");
+
+    float cutoff = 300.0f + filterEnvelope * 4000.0f;
+    sineFilter.setCutoffFrequency(cutoff);
+
+
+
+    for (const auto metadata : midi)
+    {
+        const auto msg = metadata.getMessage();
+
+        if (msg.isNoteOn())
+        {
+            midiNote = msg.getNoteNumber();
+            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
+            phaseIncrement = freq / currentSampleRate;
+            phase = 0.0;
+            filterEnvelope = 1.0f;
+            filterEnvIncrement = 1.0f / (getSampleRate() * 0.25f); // ~250ms decay
+
+            adsr.noteOn();
+        }
+        else if (msg.isNoteOff())
+        {
+            if (msg.getNoteNumber() == midiNote)
+                adsr.noteOff();
+        }
+    }
+
+    auto numSamples = buffer.getNumSamples();
+    auto numChannels = buffer.getNumChannels();
+
+
+    if (adsr.isActive()) {
+
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            float env = adsr.getNextSample(); // ADSR envelope
+            float currentSample = 0.0f;
+
+            // Vibrato (LFO on frequency)
+            float vibrato = std::sin(2.0 * juce::MathConstants<double>::pi * vibratoPhase) * vibratoDepth;
+            vibratoPhase += vibratoRate / currentSampleRate;
+            if (vibratoPhase >= 1.0)
+                vibratoPhase -= 1.0;
+
+            // Phase increment with vibrato
+            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato);
+
+            // Sine wave generation
+            float rawSine = std::sin(2.0 * juce::MathConstants<double>::pi * phase);
+            phase += modulatedPhaseInc;
+            if (phase >= 1.0)
+                phase -= 1.0;
+
+            // Filter envelope decay
+            if (filterEnvelope > 0.0f)
+            {
+                filterEnvelope -= filterEnvIncrement;
+                if (filterEnvelope < 0.0f)
+                    filterEnvelope = 0.0f;
+            }
+
+            // Modulate filter cutoff frequency
+            float cutoff = 300.0f + filterEnvelope * 4000.0f;
+            sineFilter.setCutoffFrequency(cutoff);
+
+            // Apply filter to sine wave
+            currentSample = sineFilter.processSample(0, rawSine) * env;
+
+            for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+                buffer.setSample(channel, sample, currentSample);
+        }
+    }
+    else
+    {
+        buffer.clear();
+    }
+
+
+    
+}
+
+void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>&, juce::MidiBuffer&)
+{
+}
+
+void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>&, juce::MidiBuffer&)
+{
+}
+
+void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>&, juce::MidiBuffer&)
+{
 }

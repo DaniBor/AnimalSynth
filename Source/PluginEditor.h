@@ -37,8 +37,14 @@ public:
     void setupEffectPanels();
 
     // Dummy sliders + labels per panel
-    juce::Slider sineSlider;
-    juce::Label  sineLabel;
+    juce::Slider vibratoRateSlider;
+    juce::Slider vibratoDepthSlider;
+    juce::Label vibratoRateLabel;
+    juce::Label vibratoDepthLabel;
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoRateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoDepthAttachment;
+
 
     juce::Slider sawSlider;
     juce::Label  sawLabel;

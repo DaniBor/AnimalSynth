@@ -90,7 +90,25 @@ private:
     static float generateSquare(double phase);
     static float generateTriangle(double phase);
 
-    
+    void processSineWave(juce::AudioBuffer<float>&, juce::MidiBuffer&);
+    void processSawWave(juce::AudioBuffer<float>&, juce::MidiBuffer&);
+    void processSquareWave(juce::AudioBuffer<float>&, juce::MidiBuffer&);
+    void processTriangleWave(juce::AudioBuffer<float>&, juce::MidiBuffer&);
+
+
+
+    juce::dsp::StateVariableTPTFilter<float> sineFilter;
+
+    // Filter envelope state
+    float filterEnvelope = 0.0f;
+    float filterEnvIncrement = 0.0f;
+
+
+
+    double vibratoPhase = 0.0;
+    double vibratoRate = 5.0;
+    double vibratoDepth = 0.005;
+
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessor)

@@ -60,6 +60,14 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     setupEffectPanels();
 
+    // Attach sliders to parameters
+    vibratoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "vibratoRate", vibratoRateSlider);
+
+    vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
+
+
 
 
     /*
@@ -125,7 +133,13 @@ void AnimalSynthAudioProcessorEditor::resized()
     // Position sliders at top-left corner of their respective panels
     auto topLeft = juce::Rectangle<int>(fxSliderPadding, fxSliderPadding, fxSliderSize, fxSliderSize);
 
-    sineSlider.setBounds(topLeft);
+    // Position vibrato sliders in top-left area of sineFXPanel
+    const int sliderSize = 80;
+    const int spacing = 10;
+
+    vibratoRateSlider.setBounds(spacing, spacing, sliderSize, sliderSize);
+    vibratoDepthSlider.setBounds(spacing + sliderSize + spacing, spacing, sliderSize, sliderSize);
+
     sawSlider.setBounds(topLeft);
     squareSlider.setBounds(topLeft);
     triangleSlider.setBounds(topLeft);
@@ -157,12 +171,24 @@ void AnimalSynthAudioProcessorEditor::updateEffectUI()
 void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 {
     // Sine Panel
-    sineSlider.setSliderStyle(juce::Slider::Rotary);
-    sineSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sineLabel.setText("Chorus Depth", juce::dontSendNotification);
-    sineLabel.attachToComponent(&sineSlider, false);
-    sineFXPanel.addAndMakeVisible(sineSlider);
-    sineFXPanel.addAndMakeVisible(sineLabel);
+    // Vibrato Rate
+    vibratoRateSlider.setSliderStyle(juce::Slider::Rotary);
+    vibratoRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    vibratoRateLabel.setText("Vibrato Rate", juce::dontSendNotification);
+    vibratoRateLabel.attachToComponent(&vibratoRateSlider, false);
+    sineFXPanel.addAndMakeVisible(vibratoRateSlider);
+    sineFXPanel.addAndMakeVisible(vibratoRateLabel);
+
+    // Vibrato Depth
+    vibratoDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    vibratoDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    vibratoDepthLabel.setText("Vibrato Depth", juce::dontSendNotification);
+    vibratoDepthLabel.attachToComponent(&vibratoDepthSlider, false);
+    sineFXPanel.addAndMakeVisible(vibratoDepthSlider);
+    sineFXPanel.addAndMakeVisible(vibratoDepthLabel);
+
+    
+
 
     // Saw Panel
     sawSlider.setSliderStyle(juce::Slider::Rotary);
