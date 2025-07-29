@@ -30,15 +30,11 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "waveform", waveformSelector);
 
-    
-
     auto styleKnob = [](juce::Slider& s)
         {
             s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
             s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
         };
-
-
 
     styleKnob(attackSlider); addAndMakeVisible(attackSlider);
     styleKnob(decaySlider);  addAndMakeVisible(decaySlider);
@@ -67,9 +63,6 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
 
-
-
-
     /*
     audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
         {
@@ -77,7 +70,6 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
         };
 
     addAndMakeVisible(*audioScope);*/
-
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
@@ -143,10 +135,6 @@ void AnimalSynthAudioProcessorEditor::resized()
     sawSlider.setBounds(topLeft);
     squareSlider.setBounds(topLeft);
     triangleSlider.setBounds(topLeft);
-
-
-
-
 }
 
 void AnimalSynthAudioProcessorEditor::updateEffectUI()
@@ -170,7 +158,7 @@ void AnimalSynthAudioProcessorEditor::updateEffectUI()
 
 void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 {
-    // Sine Panel
+    // === Sine Panel ===
     // Vibrato Rate
     vibratoRateSlider.setSliderStyle(juce::Slider::Rotary);
     vibratoRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -188,9 +176,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sineFXPanel.addAndMakeVisible(vibratoDepthLabel);
 
     
-
-
-    // Saw Panel
+    // === Saw Panel ===
     sawSlider.setSliderStyle(juce::Slider::Rotary);
     sawSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     sawLabel.setText("Distortion Drive", juce::dontSendNotification);
@@ -198,7 +184,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawFXPanel.addAndMakeVisible(sawSlider);
     sawFXPanel.addAndMakeVisible(sawLabel);
 
-    // Square Panel
+    // === Square Panel ===
     squareSlider.setSliderStyle(juce::Slider::Rotary);
     squareSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     squareLabel.setText("Croak Rate", juce::dontSendNotification);
@@ -206,7 +192,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     squareFXPanel.addAndMakeVisible(squareSlider);
     squareFXPanel.addAndMakeVisible(squareLabel);
 
-    // Triangle Panel
+    // === Triangle Panel ===
     triangleSlider.setSliderStyle(juce::Slider::Rotary);
     triangleSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     triangleLabel.setText("Reverb Mix", juce::dontSendNotification);

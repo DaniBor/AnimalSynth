@@ -134,22 +134,8 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     sineFilter.setCutoffFrequency(1000.0f);
     sineFilter.setResonance(0.3f);
 
-
-
-
-
     int waveformIndex = *parameters.getRawParameterValue("waveform");
     std::cout << waveformIndex;
-
-    // Choose waveform function ONCE
-    switch (static_cast<WaveformType>(waveformIndex))
-    {
-    case WaveformType::Sine:    currentWaveformFunction = generateSine; break;
-    case WaveformType::Saw:     currentWaveformFunction = generateSaw; break;
-    case WaveformType::Square:  currentWaveformFunction = generateSquare; break;
-    case WaveformType::Triangle:currentWaveformFunction = generateTriangle; break;
-    default:                    currentWaveformFunction = generateSine; break;
-    }
 }
 
 void AnimalSynthAudioProcessor::releaseResources()
@@ -192,22 +178,6 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     int currentWaveformIndex = *parameters.getRawParameterValue("waveform");
 
-    if (currentWaveformIndex != lastWaveformIndex)
-    {
-        lastWaveformIndex = currentWaveformIndex;
-
-        switch (static_cast<WaveformType>(currentWaveformIndex))
-        {
-        case WaveformType::Sine:     currentWaveformFunction = generateSine; break;
-        case WaveformType::Saw:      currentWaveformFunction = generateSaw; break;
-        case WaveformType::Square:   currentWaveformFunction = generateSquare; break;
-        case WaveformType::Triangle: currentWaveformFunction = generateTriangle; break;
-        default:                     currentWaveformFunction = generateSine; break;
-        }
-    }
-
-
-
     buffer.clear();
 
     adsrParams.attack = *parameters.getRawParameterValue("attack");
@@ -217,11 +187,6 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     adsr.setParameters(adsrParams);
 
-
-    
-
-    
-
     switch (static_cast<WaveformType>(currentWaveformIndex))
     {
         case WaveformType::Sine: processSineWave(buffer, midiMessages); break;
@@ -230,8 +195,6 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         case WaveformType::Triangle: processTriangleWave(buffer, midiMessages); break;
         default: buffer.clear(); break;
     }
-
-    
 
     /*if (pushAudioToScope)
         pushAudioToScope(buffer);*/
@@ -272,39 +235,19 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new AnimalSynthAudioProcessor();
 }
 
-
-float AnimalSynthAudioProcessor::generateSine(double phase)
-{
-    return std::sin(juce::MathConstants<double>::twoPi * phase);
-}
-
-float AnimalSynthAudioProcessor::generateSaw(double phase)
-{
-    return static_cast<float>(2.0 * (phase - 0.5));
-}
-
-float AnimalSynthAudioProcessor::generateSquare(double phase)
-{
-    return phase < 0.5 ? 1.0f : -1.0f;
-}
-
-float AnimalSynthAudioProcessor::generateTriangle(double phase)
-{
-    return static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
-}
-
 void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
+    auto numSamples = buffer.getNumSamples();
+    auto numChannels = buffer.getNumChannels();
 
     // Read current vibrato settings
     vibratoRate = *parameters.getRawParameterValue("vibratoRate");
     vibratoDepth = *parameters.getRawParameterValue("vibratoDepth");
 
-    float cutoff = 300.0f + filterEnvelope * 4000.0f;
+    float cutoff = 300.0f + sinefilterEnvelope * 4000.0f;
     sineFilter.setCutoffFrequency(cutoff);
 
-
-
+    // === Handle MIDI ===
     for (const auto metadata : midi)
     {
         const auto msg = metadata.getMessage();
@@ -315,8 +258,8 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
             phaseIncrement = freq / currentSampleRate;
             phase = 0.0;
-            filterEnvelope = 1.0f;
-            filterEnvIncrement = 1.0f / (getSampleRate() * 0.25f); // ~250ms decay
+            sinefilterEnvelope = 1.0f;
+            sineFilterEnvIncrement = 1.0f / (getSampleRate() * 0.25f); // ~250ms decay
 
             adsr.noteOn();
         }
@@ -327,10 +270,7 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
         }
     }
 
-    auto numSamples = buffer.getNumSamples();
-    auto numChannels = buffer.getNumChannels();
-
-
+    // === Synthesis loop ===
     if (adsr.isActive()) {
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
@@ -354,15 +294,15 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
                 phase -= 1.0;
 
             // Filter envelope decay
-            if (filterEnvelope > 0.0f)
+            if (sinefilterEnvelope > 0.0f)
             {
-                filterEnvelope -= filterEnvIncrement;
-                if (filterEnvelope < 0.0f)
-                    filterEnvelope = 0.0f;
+                sinefilterEnvelope -= sineFilterEnvIncrement;
+                if (sinefilterEnvelope < 0.0f)
+                    sinefilterEnvelope = 0.0f;
             }
 
             // Modulate filter cutoff frequency
-            float cutoff = 300.0f + filterEnvelope * 4000.0f;
+            float cutoff = 300.0f + sinefilterEnvelope * 4000.0f;
             sineFilter.setCutoffFrequency(cutoff);
 
             // Apply filter to sine wave
@@ -376,19 +316,151 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
     {
         buffer.clear();
     }
-
-
-    
 }
 
-void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>&, juce::MidiBuffer&)
+void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
+    auto numSamples = buffer.getNumSamples();
+    auto numChannels = buffer.getNumChannels();
+    auto sampleRate = getSampleRate();
+
+    // === Handle MIDI ===
+    for (const auto metadata : midi)
+    {
+        const auto msg = metadata.getMessage();
+
+        if (msg.isNoteOn())
+        {
+            midiNote = msg.getNoteNumber();
+            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
+
+            phaseIncrement = freq / sampleRate;
+            phase = 0.0;
+            adsr.noteOn();
+        }
+        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
+        {
+            adsr.noteOff();
+        }
+    }
+
+    // === Synthesis loop ===
+    if (adsr.isActive())
+    {
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            float env = adsr.getNextSample();
+            float rawSample = static_cast<float>(2.0 * (phase - 0.5));
+            float currentSample = rawSample * env;
+
+            phase += phaseIncrement;
+            if (phase >= 1.0)
+                phase -= 1.0;
+
+            for (int channel = 0; channel < numChannels; ++channel)
+                buffer.setSample(channel, sample, currentSample);
+        }
+    }
+    else
+    {
+        buffer.clear();
+    }
 }
 
-void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>&, juce::MidiBuffer&)
+void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
+    auto numSamples = buffer.getNumSamples();
+    auto numChannels = buffer.getNumChannels();
+    auto sampleRate = getSampleRate();
+
+    // === Handle MIDI ===
+    for (const auto metadata : midi)
+    {
+        const auto msg = metadata.getMessage();
+
+        if (msg.isNoteOn())
+        {
+            midiNote = msg.getNoteNumber();
+            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
+
+            phaseIncrement = freq / sampleRate;
+            phase = 0.0;
+            adsr.noteOn();
+        }
+        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
+        {
+            adsr.noteOff();
+        }
+    }
+
+    // === Synthesis loop ===
+    if (adsr.isActive())
+    {
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            float env = adsr.getNextSample();
+            float rawSample = phase < 0.5 ? 1.0f : -1.0f;
+            float currentSample = rawSample * env;
+
+            phase += phaseIncrement;
+            if (phase >= 1.0)
+                phase -= 1.0;
+
+            for (int channel = 0; channel < numChannels; ++channel)
+                buffer.setSample(channel, sample, currentSample);
+        }
+    }
+    else
+    {
+        buffer.clear();
+    }
 }
 
-void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>&, juce::MidiBuffer&)
+void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
+    auto numSamples = buffer.getNumSamples();
+    auto numChannels = buffer.getNumChannels();
+    auto sampleRate = getSampleRate();
+
+    // === Handle MIDI ===
+    for (const auto metadata : midi)
+    {
+        const auto msg = metadata.getMessage();
+
+        if (msg.isNoteOn())
+        {
+            midiNote = msg.getNoteNumber();
+            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
+
+            phaseIncrement = freq / sampleRate;
+            phase = 0.0;
+            adsr.noteOn();
+        }
+        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
+        {
+            adsr.noteOff();
+        }
+    }
+
+    // === Synthesis loop ===
+    if (adsr.isActive())
+    {
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            float env = adsr.getNextSample();
+            float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
+            float currentSample = rawSample * env;
+
+            phase += phaseIncrement;
+            if (phase >= 1.0)
+                phase -= 1.0;
+
+            for (int channel = 0; channel < numChannels; ++channel)
+                buffer.setSample(channel, sample, currentSample);
+        }
+    }
+    else
+    {
+        buffer.clear();
+    }
 }
