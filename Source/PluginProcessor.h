@@ -96,6 +96,10 @@ private:
     double vibratoRate = 5.0;
     double vibratoDepth = 0.005;
 
+    juce::SmoothedValue<float> flutterAmount;
+    int flutterCounter = 0;
+    int flutterUpdateInterval = 0;
+
     // === Saw Filter and FX ===
     juce::dsp::StateVariableTPTFilter<float> sawFilter;
     float sawFilterEnvelope = 0.0f;

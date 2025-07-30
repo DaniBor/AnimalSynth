@@ -74,6 +74,12 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
 
+    flutterDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "flutterDepth", flutterDepthSlider);
+
+    flutterRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "flutterRate", flutterRateSlider);
+
     sawDistortionAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "sawDistortionAmount", sawDistortionSlider);
 
@@ -148,7 +154,10 @@ void AnimalSynthAudioProcessorEditor::resized()
     auto topLeft = juce::Rectangle<int>(fxSliderPadding, fxSliderPadding, fxSliderSize, fxSliderSize);
 
     vibratoRateSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
-    vibratoDepthSlider.setBounds(20 + fxSliderSize, 30, fxSliderSize, fxSliderSize);
+    vibratoDepthSlider.setBounds(10 + 15 + fxSliderSize, 30, fxSliderSize, fxSliderSize);
+
+    flutterRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
+    flutterDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
 
     sawDistortionSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
     squareSlider.setBounds(topLeft);
@@ -193,6 +202,30 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     vibratoDepthLabel.attachToComponent(&vibratoDepthSlider, false);
     sineFXPanel.addAndMakeVisible(vibratoDepthSlider);
     sineFXPanel.addAndMakeVisible(vibratoDepthLabel);
+
+    // Flutter Depth
+    flutterDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    flutterDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    flutterDepthLabel.setText("Flut Depth", juce::dontSendNotification);
+    flutterDepthLabel.attachToComponent(&flutterDepthSlider, false);
+    sineFXPanel.addAndMakeVisible(flutterDepthSlider);
+    sineFXPanel.addAndMakeVisible(flutterDepthLabel);
+
+    
+
+    // Flutter Rate
+    flutterRateSlider.setSliderStyle(juce::Slider::Rotary);
+    flutterRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    flutterRateLabel.setText("Flut Depth", juce::dontSendNotification);
+    flutterRateLabel.attachToComponent(&flutterRateSlider, false);
+    sineFXPanel.addAndMakeVisible(flutterRateSlider);
+    sineFXPanel.addAndMakeVisible(flutterRateLabel);
+    
+
+
+
+
+
 
     
     // === Saw Panel ===

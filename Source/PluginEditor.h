@@ -47,6 +47,15 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoRateAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoDepthAttachment;
 
+    juce::Slider flutterRateSlider;
+    juce::Slider flutterDepthSlider;
+    juce::Label flutterRateLabel;
+    juce::Label flutterDepthLabel;
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterDepthAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterRateAttachment;
+
+
     // === Saw Panel Elements ===
     juce::Slider sawDistortionSlider;
     juce::Label sawDistortionLabel;

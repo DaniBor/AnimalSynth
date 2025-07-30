@@ -27,12 +27,17 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             juce::StringArray { "Sine", "Saw", "Square", "Triangle" },
             0
         ),
+            // === ADSR Params ===
         std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 1.0f, 0.1f),
         std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 1.0f, 0.2f),
         std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
         std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f),
+            // === Sine Params ===
         std::make_unique<juce::AudioParameterFloat>("vibratoRate", "Vibrato Rate", 0.0f, 10.0f, 5.0f),
         std::make_unique<juce::AudioParameterFloat>("vibratoDepth", "Vibrato Depth", 0.0f, 0.05f, 0.001f),
+        std::make_unique<juce::AudioParameterFloat>("flutterDepth", "Flutter Depth", 0.0f, 0.05f, 0.01f),
+        std::make_unique<juce::AudioParameterFloat>("flutterRate",  "Flutter Rate",  0.1f, 20.0f, 5.0f),
+            // === Saw Params ===
         std::make_unique<juce::AudioParameterFloat>(
             "sawDistortionAmount", "Saw Distortion",
             juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f), 3.0f)
@@ -124,6 +129,10 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     adsr.setParameters(adsrParams);
 
     adsr.setSampleRate(currentSampleRate);
+
+    flutterAmount.reset(sampleRate, 0.01); // smoothing time
+    flutterCounter = 0;
+    flutterUpdateInterval = static_cast<int>(sampleRate / *parameters.getRawParameterValue("flutterRate"));
 
 
     juce::dsp::ProcessSpec sineSpec;
@@ -306,8 +315,19 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
             if (vibratoPhase >= 1.0)
                 vibratoPhase -= 1.0;
 
-            // Phase increment with vibrato
-            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato);
+            // Flutter update
+            if (++flutterCounter >= flutterUpdateInterval)
+            {
+                flutterCounter = 0;
+                float depth = *parameters.getRawParameterValue("flutterDepth");
+                float randomValue = juce::Random::getSystemRandom().nextFloat() * 2.0f - 1.0f;
+                flutterAmount.setTargetValue(randomValue * depth);
+            }
+
+            float flutter = flutterAmount.getNextValue();
+
+            // Phase increment with vibrato and flutter
+            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato + flutter);
 
             // Sine wave generation
             float rawSine = std::sin(2.0 * juce::MathConstants<double>::pi * phase);
