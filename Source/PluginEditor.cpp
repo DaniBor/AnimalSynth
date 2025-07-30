@@ -18,7 +18,9 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     //audioScope = std::make_unique<ScaledVisualiserComponent>(2048);
 
-    setSize (400, 300);
+    setSize (500, 375);
+
+    setLookAndFeel(&customLookAndFeel);
 
     waveformSelector.addItem("Howl (Sine)", 1);
     waveformSelector.addItem("Growl (Saw)", 2);
@@ -53,8 +55,17 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     addAndMakeVisible(squareFXPanel);
     addAndMakeVisible(triangleFXPanel);
 
+    animationPlaceholder.setInterceptsMouseClicks(false, false);
+    animationPlaceholder.setText("Animation Placeholder");
+    addAndMakeVisible(animationPlaceholder);
 
     setupEffectPanels();
+
+    polyMalButton.setText("PolyMal");
+    addAndMakeVisible(polyMalButton);
+
+    waveVisualizer.setText("Oscillator");
+    addAndMakeVisible(waveVisualizer);
 
     // Attach sliders to parameters
     vibratoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -88,23 +99,35 @@ void AnimalSynthAudioProcessorEditor::paint (juce::Graphics& g)
 
 void AnimalSynthAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
-
     auto bounds = getLocalBounds().reduced(10);
-    auto header = bounds.removeFromTop(40);
 
-    waveformSelector.setBounds(header.removeFromLeft(200));
-
-    sineFXPanel.setBounds(bounds);
-    sawFXPanel.setBounds(bounds);
-    squareFXPanel.setBounds(bounds);
-    triangleFXPanel.setBounds(bounds);
-    //audioScope->setBounds(10, 40, getWidth() - 20, 75);
+    // Top bar for waveform selector and animation preview
+    auto topBar = bounds.removeFromTop(180); // Reserve height for both
 
 
-    // Reserve bottom area for ADSR (e.g., 120 px high)
-    auto adsrArea = bounds.removeFromBottom(80);
+    // Reserve left and right portions
+    auto waveformColumn = topBar.removeFromLeft(200); // 200px wide (left side)
+    auto animationBounds = topBar.removeFromRight(220).withHeight(160); // animation right side
+
+    waveformSelector.setBounds(waveformColumn.removeFromTop(40));
+    waveformColumn.removeFromTop(10);
+    waveVisualizer.setBounds(waveformColumn.removeFromTop(110));
+    
+    animationPlaceholder.setBounds(animationBounds);
+
+    // FX panel area
+    auto fxBounds = bounds.removeFromTop(100);
+    sineFXPanel.setBounds(fxBounds);
+    sawFXPanel.setBounds(fxBounds);
+    squareFXPanel.setBounds(fxBounds);
+    triangleFXPanel.setBounds(fxBounds);
+
+    // Reserve bottom area for ADSR
+    auto adsrAreaFull = bounds.removeFromBottom(60);
+
+    // Split into 75% (for ADSR sliders) and 25% (for second visual placeholder)
+    auto adsrArea = adsrAreaFull.removeFromLeft(adsrAreaFull.getWidth() * 3 / 4);
+    auto adsrPlaceholderArea = adsrAreaFull; // Remaining 25%
 
     // Layout ADSR sliders in adsrArea
     auto sliderZoneWidth = adsrArea.getWidth() / 4;
@@ -112,34 +135,26 @@ void AnimalSynthAudioProcessorEditor::resized()
     for (auto* slider : { &attackSlider, &decaySlider, &sustainSlider, &releaseSlider })
     {
         auto zone = adsrArea.removeFromLeft(sliderZoneWidth);
-        slider->setBounds(zone.withSizeKeepingCentre(60, 80)); // smaller knob
+        slider->setBounds(zone.withSizeKeepingCentre(50, 60)); // smaller knob
     }
 
-    // Remaining "bounds" is now for FX panel
-    sineFXPanel.setBounds(bounds);
-    sawFXPanel.setBounds(bounds);
-    squareFXPanel.setBounds(bounds);
-    triangleFXPanel.setBounds(bounds);
+    // Reuse animation component as second placeholder
+    polyMalButton.setBounds(adsrPlaceholderArea);
 
-    // Define consistent slider size and padding
-    const int fxSliderSize = 80;
-    const int fxSliderPadding = 30;
+    // FX sliders
+    const int fxSliderSize = 60;
+    const int fxSliderPadding = 15;
 
-    // Position sliders at top-left corner of their respective panels
     auto topLeft = juce::Rectangle<int>(fxSliderPadding, fxSliderPadding, fxSliderSize, fxSliderSize);
 
-    // Position vibrato sliders in top-left area of sineFXPanel
-    const int sliderSize = 80;
-    const int spacing = 10;
+    vibratoRateSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
+    vibratoDepthSlider.setBounds(20 + fxSliderSize, 30, fxSliderSize, fxSliderSize);
 
-    vibratoRateSlider.setBounds(spacing, spacing, sliderSize, sliderSize);
-    vibratoDepthSlider.setBounds(spacing + sliderSize + spacing, spacing, sliderSize, sliderSize);
-
-    sawDistortionSlider.setBounds(topLeft);
-
+    sawDistortionSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
     squareSlider.setBounds(topLeft);
     triangleSlider.setBounds(topLeft);
 }
+
 
 void AnimalSynthAudioProcessorEditor::updateEffectUI()
 {
@@ -166,7 +181,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Vibrato Rate
     vibratoRateSlider.setSliderStyle(juce::Slider::Rotary);
     vibratoRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    vibratoRateLabel.setText("Vibrato Rate", juce::dontSendNotification);
+    vibratoRateLabel.setText("Vib Rate", juce::dontSendNotification);
     vibratoRateLabel.attachToComponent(&vibratoRateSlider, false);
     sineFXPanel.addAndMakeVisible(vibratoRateSlider);
     sineFXPanel.addAndMakeVisible(vibratoRateLabel);
@@ -174,7 +189,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Vibrato Depth
     vibratoDepthSlider.setSliderStyle(juce::Slider::Rotary);
     vibratoDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    vibratoDepthLabel.setText("Vibrato Depth", juce::dontSendNotification);
+    vibratoDepthLabel.setText("Vib Depth", juce::dontSendNotification);
     vibratoDepthLabel.attachToComponent(&vibratoDepthSlider, false);
     sineFXPanel.addAndMakeVisible(vibratoDepthSlider);
     sineFXPanel.addAndMakeVisible(vibratoDepthLabel);
@@ -183,7 +198,10 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // === Saw Panel ===
     sawDistortionSlider.setSliderStyle(juce::Slider::Rotary);
     sawDistortionSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawDistortionLabel.setText("Distortion", juce::dontSendNotification);
+    sawDistortionLabel.attachToComponent(&sawDistortionSlider, false);
     sawFXPanel.addAndMakeVisible(sawDistortionSlider);
+    sawFXPanel.addAndMakeVisible(sawDistortionLabel);
 
 
     // === Square Panel ===

@@ -12,6 +12,8 @@
 #include "PluginProcessor.h"
 #include "ScaledVisualizerComponent.h"
 #include "BorderedPanel.h"
+#include "CustomLookAndFeel.h"
+#include "AnimationDisplayComponent.h"
 
 //==============================================================================
 /**
@@ -47,6 +49,7 @@ public:
 
     // === Saw Panel Elements ===
     juce::Slider sawDistortionSlider;
+    juce::Label sawDistortionLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionAttachment;
 
 
@@ -67,6 +70,11 @@ private:
     juce::ComboBox waveformSelector;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
 
+    CustomLookAndFeel customLookAndFeel;
+
+    AnimationDisplayComponent animationPlaceholder;
+    AnimationDisplayComponent polyMalButton;
+    AnimationDisplayComponent waveVisualizer;
 
     BorderedPanel sineFXPanel;
     BorderedPanel sawFXPanel;

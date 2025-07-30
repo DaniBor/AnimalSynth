@@ -5,6 +5,10 @@
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
+      <FILE id="WEqhXU" name="AnimationDisplayComponent.h" compile="0" resource="0"
+            file="Source/AnimationDisplayComponent.h"/>
+      <FILE id="hlEp4Q" name="CustomLookAndFeel.h" compile="0" resource="0"
+            file="Source/CustomLookAndFeel.h"/>
       <FILE id="hzr0Un" name="BorderedPanel.h" compile="0" resource="0" file="Source/BorderedPanel.h"/>
       <FILE id="SHlpGI" name="ScaledVisualizerComponent.h" compile="0" resource="0"
             file="Source/ScaledVisualizerComponent.h"/>
