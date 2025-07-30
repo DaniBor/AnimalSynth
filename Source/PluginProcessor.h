@@ -97,6 +97,15 @@ private:
     double vibratoDepth = 0.005;
 
     // === Saw Filter and FX ===
+    juce::dsp::StateVariableTPTFilter<float> sawFilter;
+    float sawFilterEnvelope = 0.0f;
+    float sawFilterEnvIncrement = 0.0f;
+
+    juce::dsp::WaveShaper<float> sawDistortion;
+
+    float amPhase = 0.0f;
+    float amRate = 30.0f; // Hz
+    float amDepth = 0.3f; // Strength of modulation
 
     // === Square Filter and FX ===
 

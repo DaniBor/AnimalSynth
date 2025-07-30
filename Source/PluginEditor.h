@@ -46,8 +46,9 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoDepthAttachment;
 
     // === Saw Panel Elements ===
-    juce::Slider sawSlider;
-    juce::Label  sawLabel;
+    juce::Slider sawDistortionSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionAttachment;
+
 
     // === Square Panel Elements ===
     juce::Slider squareSlider;

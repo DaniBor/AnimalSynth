@@ -63,6 +63,9 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
 
+    sawDistortionAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sawDistortionAmount", sawDistortionSlider);
+
     /*
     audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
         {
@@ -132,7 +135,8 @@ void AnimalSynthAudioProcessorEditor::resized()
     vibratoRateSlider.setBounds(spacing, spacing, sliderSize, sliderSize);
     vibratoDepthSlider.setBounds(spacing + sliderSize + spacing, spacing, sliderSize, sliderSize);
 
-    sawSlider.setBounds(topLeft);
+    sawDistortionSlider.setBounds(topLeft);
+
     squareSlider.setBounds(topLeft);
     triangleSlider.setBounds(topLeft);
 }
@@ -177,12 +181,10 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
     
     // === Saw Panel ===
-    sawSlider.setSliderStyle(juce::Slider::Rotary);
-    sawSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawLabel.setText("Distortion Drive", juce::dontSendNotification);
-    sawLabel.attachToComponent(&sawSlider, false);
-    sawFXPanel.addAndMakeVisible(sawSlider);
-    sawFXPanel.addAndMakeVisible(sawLabel);
+    sawDistortionSlider.setSliderStyle(juce::Slider::Rotary);
+    sawDistortionSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawFXPanel.addAndMakeVisible(sawDistortionSlider);
+
 
     // === Square Panel ===
     squareSlider.setSliderStyle(juce::Slider::Rotary);
