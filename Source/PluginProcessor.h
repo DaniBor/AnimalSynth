@@ -121,6 +121,8 @@ private:
     float sweepPhase = 0.0f;
 
     // === Square Filter and FX ===
+    float squarePunchLevel = 0.0f;
+    float squarePunchDecayRate = 0.0f;
 
     // === Triangle Filter and FX ===
     double glideStartFreq = 0.0f;

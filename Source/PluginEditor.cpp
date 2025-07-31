@@ -24,7 +24,7 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     waveformSelector.addItem("Howl (Sine)", 1);
     waveformSelector.addItem("Growl (Saw)", 2);
-    waveformSelector.addItem("Croak (Square)", 3);
+    waveformSelector.addItem("Bark (Square)", 3);
     waveformSelector.addItem("Chirp (Triangle)", 4);
     waveformSelector.onChange = [this] { updateEffectUI(); };
     addAndMakeVisible(waveformSelector);
@@ -170,6 +170,8 @@ void AnimalSynthAudioProcessorEditor::resized()
 
     auto topLeft = juce::Rectangle<int>(fxSliderPadding, fxSliderPadding, fxSliderSize, fxSliderSize);
 
+
+    // === Sine Sliders ===
     vibratoRateSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
     vibratoDepthSlider.setBounds(10 + 15 + fxSliderSize, 30, fxSliderSize, fxSliderSize);
 
@@ -179,18 +181,22 @@ void AnimalSynthAudioProcessorEditor::resized()
     tremoloRateSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
     tremoloDepthSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
 
+
+    // === Saw Sliders ===
     sawDistortionAmountSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
     sawDistortionToneSlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
 
-    // Next two positions after distortion sliders
     sawSweepRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
     sawSweepDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
 
 
 
-
-    squareSlider.setBounds(topLeft);
+    // === Square Sliders ===
+    squarePunchAmountSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
+    squarePunchDecaySlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
     
+
+    // === Triangle Sliders ===
     triGlideTimeSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
     triGlideDepthSlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
 
@@ -315,12 +321,27 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
 
     // === Square Panel ===
-    squareSlider.setSliderStyle(juce::Slider::Rotary);
-    squareSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    squareLabel.setText("Croak Rate", juce::dontSendNotification);
-    squareLabel.attachToComponent(&squareSlider, false);
-    squareFXPanel.addAndMakeVisible(squareSlider);
-    squareFXPanel.addAndMakeVisible(squareLabel);
+    // Punch Amount Slider
+    squarePunchAmountSlider.setSliderStyle(juce::Slider::Rotary);
+    squarePunchAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    squarePunchAmountLabel.setText("Punch Amt", juce::dontSendNotification);
+    squarePunchAmountLabel.attachToComponent(&squarePunchAmountSlider, false);
+    squareFXPanel.addAndMakeVisible(squarePunchAmountSlider);
+    squareFXPanel.addAndMakeVisible(squarePunchAmountLabel);
+
+    squarePunchAmountAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "squarePunchAmount", squarePunchAmountSlider);
+
+    // Punch Decay Slider
+    squarePunchDecaySlider.setSliderStyle(juce::Slider::Rotary);
+    squarePunchDecaySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    squarePunchDecayLabel.setText("Punch Decay", juce::dontSendNotification);
+    squarePunchDecayLabel.attachToComponent(&squarePunchDecaySlider, false);
+    squareFXPanel.addAndMakeVisible(squarePunchDecaySlider);
+    squareFXPanel.addAndMakeVisible(squarePunchDecayLabel);
+
+    squarePunchDecayAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "squarePunchDecay", squarePunchDecaySlider);
 
     // === Triangle Panel ===
     // Glide Time

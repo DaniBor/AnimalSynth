@@ -82,8 +82,13 @@ public:
     AnimationDisplayComponent animationPlaceholder;
 
     // === Square Panel Elements ===
-    juce::Slider squareSlider;
-    juce::Label  squareLabel;
+    juce::Slider squarePunchAmountSlider;
+    juce::Label squarePunchAmountLabel;
+    juce::Slider squarePunchDecaySlider;
+    juce::Label squarePunchDecayLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchAmountAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchDecayAttachment;
+
 
     // === Triangle Panel Elements ===
     juce::Slider triGlideTimeSlider;

@@ -60,7 +60,15 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             juce::NormalisableRange<float>(50.0f, 3000.0f, 1.0f), 1000.0f
         ),
             // === Square Params ===
+        std::make_unique<juce::AudioParameterFloat>(
+            "squarePunchAmount", "Punch Amount",
+            juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.7f
+        ),
 
+        std::make_unique<juce::AudioParameterFloat>(
+            "squarePunchDecay", "Punch Decay",
+            juce::NormalisableRange<float>(0.01f, 0.3f, 0.01f), 0.05f
+        ),
             // === Triangle Params ===
         std::make_unique<juce::AudioParameterFloat>("triGlideTime", "Glide Time", 0.0f, 0.2f, 0.05f),
         std::make_unique<juce::AudioParameterFloat>(
@@ -541,12 +549,15 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
 
             phaseIncrement = freq / sampleRate;
-            //phase = 0.0;
+            phase = 0.0;
             adsr.noteOn();
-        }
-        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
-        {
-            adsr.noteOff();
+
+            // --- Punch envelope init ---
+            float punchAmt = *parameters.getRawParameterValue("squarePunchAmount");
+            float punchDecayTime = *parameters.getRawParameterValue("squarePunchDecay");
+
+            squarePunchLevel = punchAmt;
+            squarePunchDecayRate = punchAmt / (sampleRate * punchDecayTime);
         }
     }
 
@@ -555,9 +566,23 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
     {
         for (int sample = 0; sample < numSamples; ++sample)
         {
+            
+
+
+
             float env = adsr.getNextSample();
             float rawSample = phase < 0.5 ? 1.0f : -1.0f;
-            float currentSample = rawSample * env;
+            
+
+            if (squarePunchLevel > 0.0f)
+            {
+                squarePunchLevel -= squarePunchDecayRate;
+                if (squarePunchLevel < 0.0f)
+                    squarePunchLevel = 0.0f;
+            }
+            float punchEnv = 1.0f + squarePunchLevel;
+
+            float currentSample = rawSample * env * punchEnv;
 
             phase += phaseIncrement;
             if (phase >= 1.0)
