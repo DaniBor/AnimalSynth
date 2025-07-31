@@ -185,6 +185,11 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
         });
 
     int waveformIndex = *parameters.getRawParameterValue("waveform");
+
+    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    if (e != nullptr) {
+        e->animationPlaceholder.setNewAnimal(waveformIndex);
+    }
 }
 
 void AnimalSynthAudioProcessor::releaseResources()
@@ -225,7 +230,14 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    
+
     int currentWaveformIndex = *parameters.getRawParameterValue("waveform");
+
+    if (e != nullptr && currentWaveformIndex != e->animationPlaceholder.getIndex()) {
+        e->animationPlaceholder.setNewAnimal(currentWaveformIndex);
+    }
 
     buffer.clear();
 
@@ -322,18 +334,18 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
         }
     }
 
+    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+
     // === Synthesis loop ===
-    if (adsr.isActive()) {
+    if (adsr.isActive() && e != nullptr) {
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
             float env = adsr.getNextSample(); // ADSR envelope
             float currentSample = 0.0f;
 
-            AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
-            if (e != nullptr) {
-                e->animationPlaceholder.setEnvelopeLevel(env);
-            }
+            
+            e->animationPlaceholder.setEnvelopeLevel(env);
 
             // Vibrato (LFO on frequency)
             float vibrato = std::sin(2.0 * juce::MathConstants<double>::pi * vibratoPhase) * vibratoDepth;
@@ -411,7 +423,7 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
 
             phaseIncrement = freq / sampleRate;
-            phase = 0.0;
+            //phase = 0.0;
             adsr.noteOn();
 
             // Trigger filter envelope
@@ -424,8 +436,10 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
         }
     }
 
+    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+
     // === Synthesis loop ===
-    if (adsr.isActive())
+    if (adsr.isActive() && e != nullptr)
     {
         float toneCutoff = *parameters.getRawParameterValue("sawDistortionTone");
         sawPostFilter.setCutoffFrequency(toneCutoff);
@@ -433,6 +447,7 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
             float env = adsr.getNextSample();
+            e->animationPlaceholder.setEnvelopeLevel(env);
 
             // Generate saw wave
             float rawSaw = 2.0f * static_cast<float>(phase) - 1.0f;
@@ -496,7 +511,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
 
             phaseIncrement = freq / sampleRate;
-            phase = 0.0;
+            //phase = 0.0;
             adsr.noteOn();
         }
         else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
@@ -545,7 +560,7 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
 
             phaseIncrement = freq / sampleRate;
-            phase = 0.0;
+            //phase = 0.0;
             adsr.noteOn();
         }
         else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)

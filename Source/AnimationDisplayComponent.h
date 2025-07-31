@@ -12,9 +12,14 @@ public:
     void setEnvelopeLevel(float level);
     void setFrames(std::vector<juce::Image> newFrames);
 
+    void setNewAnimal(int waveformIndex);
+
+    int getIndex();
+
 private:
     void timerCallback() override;
 
+    int curIndex;
     std::vector<juce::Image> frames;
     std::atomic<float> envelopeLevel{ 0.0f };
     juce::String txt = "Text.";

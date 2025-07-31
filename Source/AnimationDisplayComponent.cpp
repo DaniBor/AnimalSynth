@@ -71,6 +71,25 @@ void AnimationDisplayComponent::setFrames(std::vector<juce::Image> newFrames)
     repaint();
 }
 
+void AnimationDisplayComponent::setNewAnimal(int waveformIndex)
+{
+    curIndex = waveformIndex;
+
+    switch (waveformIndex)
+    {
+    case 0: loadFrames("wolf"); break;     // Sine
+    case 1: loadFrames("bear"); break;      // Saw
+    case 2: loadFrames("bear"); break;    // Square
+    case 3: loadFrames("bear"); break;     // Triangle
+    default: loadFrames("bear"); break;
+    }
+}
+
+int AnimationDisplayComponent::getIndex()
+{
+    return curIndex;
+}
+
 void AnimationDisplayComponent::timerCallback()
 {
     repaint();

@@ -103,6 +103,8 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
         };
 
     addAndMakeVisible(*audioScope);
+
+    animationPlaceholder.setNewAnimal(0);
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
@@ -134,7 +136,7 @@ void AnimalSynthAudioProcessorEditor::resized()
     audioScope->setBounds(waveformColumn.removeFromTop(110));
     
     animationPlaceholder.setBounds(animationBounds);
-    animationPlaceholder.loadFrames("wolf");
+    
 
     // FX panel area
     auto fxBounds = bounds.removeFromTop(100);
