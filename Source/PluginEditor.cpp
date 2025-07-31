@@ -55,6 +55,8 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     addAndMakeVisible(squareFXPanel);
     addAndMakeVisible(triangleFXPanel);
 
+    animationPlaceholder.setNewAnimal(0);
+
     animationPlaceholder.setInterceptsMouseClicks(false, false);
     animationPlaceholder.setText("Animation Placeholder");
     addAndMakeVisible(animationPlaceholder);
@@ -64,8 +66,6 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     polyMalButton.setText("PolyMal");
     addAndMakeVisible(polyMalButton);
 
-    waveVisualizer.setText("Oscillator");
-    //addAndMakeVisible(waveVisualizer);
 
     // Attach sliders to parameters
     vibratoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -104,7 +104,7 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     addAndMakeVisible(*audioScope);
 
-    animationPlaceholder.setNewAnimal(0);
+    
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
@@ -190,7 +190,13 @@ void AnimalSynthAudioProcessorEditor::resized()
 
 
     squareSlider.setBounds(topLeft);
-    triangleSlider.setBounds(topLeft);
+    
+    triGlideTimeSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
+    triGlideDepthSlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
+
+    triChirpRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
+    triChirpDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+
 }
 
 
@@ -314,12 +320,53 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     squareFXPanel.addAndMakeVisible(squareLabel);
 
     // === Triangle Panel ===
-    triangleSlider.setSliderStyle(juce::Slider::Rotary);
-    triangleSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triangleLabel.setText("Reverb Mix", juce::dontSendNotification);
-    triangleLabel.attachToComponent(&triangleSlider, false);
-    triangleFXPanel.addAndMakeVisible(triangleSlider);
-    triangleFXPanel.addAndMakeVisible(triangleLabel);
+    // Glide Time
+    triGlideTimeSlider.setSliderStyle(juce::Slider::Rotary);
+    triGlideTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triGlideTimeLabel.setText("Glide Time", juce::dontSendNotification);
+    triGlideTimeLabel.attachToComponent(&triGlideTimeSlider, false);
+    triangleFXPanel.addAndMakeVisible(triGlideTimeSlider);
+    triangleFXPanel.addAndMakeVisible(triGlideTimeLabel);
+
+    triGlideTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "triGlideTime", triGlideTimeSlider);
+
+    // Glide Depth
+    triGlideDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    triGlideDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triGlideDepthLabel.setText("Glide Depth", juce::dontSendNotification);
+    triGlideDepthLabel.attachToComponent(&triGlideDepthSlider, false);
+    triangleFXPanel.addAndMakeVisible(triGlideDepthSlider);
+    triangleFXPanel.addAndMakeVisible(triGlideDepthLabel);
+    triGlideDepthSlider.setNumDecimalPlacesToDisplay(0);
+
+    triGlideDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "triGlideDepth", triGlideDepthSlider);
+
+    //Chirp Rate
+    triChirpRateSlider.setSliderStyle(juce::Slider::Rotary);
+    triChirpRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triChirpRateLabel.setText("Chirp Rate", juce::dontSendNotification);
+    triChirpRateLabel.attachToComponent(&triChirpRateSlider, false);
+    triangleFXPanel.addAndMakeVisible(triChirpRateSlider);
+    triangleFXPanel.addAndMakeVisible(triChirpRateLabel);
+
+    triChirpRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "triChirpRate", triChirpRateSlider);
+
+
+
+    //Chirp Depth
+    triChirpDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    triChirpDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triChirpDepthLabel.setText("Chirp Depth", juce::dontSendNotification);
+    triChirpDepthLabel.attachToComponent(&triChirpDepthSlider, false);
+    triangleFXPanel.addAndMakeVisible(triChirpDepthSlider);
+    triangleFXPanel.addAndMakeVisible(triChirpDepthLabel);
+
+    triChirpDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "triChirpDepth", triChirpDepthSlider);
+
 
 
     updateEffectUI();

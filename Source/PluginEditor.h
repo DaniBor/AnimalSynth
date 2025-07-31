@@ -86,8 +86,22 @@ public:
     juce::Label  squareLabel;
 
     // === Triangle Panel Elements ===
-    juce::Slider triangleSlider;
-    juce::Label  triangleLabel;
+    juce::Slider triGlideTimeSlider;
+    juce::Label triGlideTimeLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triGlideTimeAttachment;
+
+    juce::Slider triGlideDepthSlider;
+    juce::Label triGlideDepthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triGlideDepthAttachment;
+
+    juce::Slider triChirpDepthSlider;
+    juce::Label triChirpDepthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triChirpDepthAttachment;
+
+    juce::Slider triChirpRateSlider;
+    juce::Label triChirpRateLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triChirpRateAttachment;
+
 
 
 private:

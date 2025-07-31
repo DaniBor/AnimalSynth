@@ -33,10 +33,8 @@ void AnimationDisplayComponent::loadFrames(const juce::String& animalName)
 
 void AnimationDisplayComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::black);
+    
 
-    g.setColour(juce::Colours::limegreen);
-    g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(2.0f), 10.0f, 2.0f);
 
     if (!frames.empty())
     {
@@ -48,6 +46,12 @@ void AnimationDisplayComponent::paint(juce::Graphics& g)
     }
     else
     {
+        
+        g.fillAll(juce::Colours::black);
+
+        g.setColour(juce::Colours::limegreen);
+        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(2.0f), 10.0f, 2.0f);
+        
         g.setColour(juce::Colours::white);
         g.setFont(16.0f);
         g.drawText(txt, getLocalBounds().reduced(10), juce::Justification::centred);
@@ -80,7 +84,7 @@ void AnimationDisplayComponent::setNewAnimal(int waveformIndex)
     case 0: loadFrames("wolf"); break;     // Sine
     case 1: loadFrames("bear"); break;      // Saw
     case 2: loadFrames("bear"); break;    // Square
-    case 3: loadFrames("bear"); break;     // Triangle
+    case 3: loadFrames("bird"); break;     // Triangle
     default: loadFrames("bear"); break;
     }
 }

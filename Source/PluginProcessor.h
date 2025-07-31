@@ -123,6 +123,16 @@ private:
     // === Square Filter and FX ===
 
     // === Triangle Filter and FX ===
+    double glideStartFreq = 0.0f;
+    double glideTargetFreq = 0.0f;
+    double glideCurrentFreq = 0.0f;
+    double glideStep = 0.0f;
+    int glideSamplesLeft = 0;
+
+    float chirpPhase = 0.0f;
+    float chirpRate = 0.0f;
+    float chirpDepth = 0.0f;
+
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessor)

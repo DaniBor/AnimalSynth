@@ -58,7 +58,26 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
         std::make_unique<juce::AudioParameterFloat>(
             "sawSweepDepth", "Sweep Depth",
             juce::NormalisableRange<float>(50.0f, 3000.0f, 1.0f), 1000.0f
-        )
+        ),
+            // === Square Params ===
+
+            // === Triangle Params ===
+        std::make_unique<juce::AudioParameterFloat>("triGlideTime", "Glide Time", 0.0f, 0.2f, 0.05f),
+        std::make_unique<juce::AudioParameterFloat>(
+            "triGlideDepth", "Glide Depth",
+            juce::NormalisableRange<float>(1.0f, 24.0f, 1.0f), // Range: 1 to 24 semitones, step of 1
+            12.0f // default value
+        ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "triChirpRate", "Chirp Rate",
+            juce::NormalisableRange<float>(1.0f, 50.0f, 0.1f), 20.0f // Hz
+        ),
+
+        std::make_unique<juce::AudioParameterFloat>(
+            "triChirpDepth", "Chirp Depth",
+            juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f // 0 to full modulation
+        ),
+
         })
 #endif
 {
@@ -549,6 +568,9 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
     auto numChannels = buffer.getNumChannels();
     auto sampleRate = getSampleRate();
 
+    float chirpRate = *parameters.getRawParameterValue("triChirpRate");
+    float chirpDepth = *parameters.getRawParameterValue("triChirpDepth");
+
     // === Handle MIDI ===
     for (const auto metadata : midi)
     {
@@ -557,26 +579,62 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
         if (msg.isNoteOn())
         {
             midiNote = msg.getNoteNumber();
-            double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
 
-            phaseIncrement = freq / sampleRate;
+            double targetFreq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
+            float glideDepth = *parameters.getRawParameterValue("triGlideDepth");
+            float glideTime = *parameters.getRawParameterValue("triGlideTime");
+
+            // Calculate start frequency a number of semitones below target
+            double startFreq = targetFreq * std::pow(2.0, -glideDepth / 12.0);
+
+            glideStartFreq = startFreq;
+            glideTargetFreq = targetFreq;
+            glideCurrentFreq = startFreq;
+
+            // Total samples to interpolate over
+            glideSamplesLeft = static_cast<int>(glideTime * getSampleRate());
+
+            if (glideSamplesLeft > 0)
+                glideStep = (glideTargetFreq - glideStartFreq) / glideSamplesLeft;
+            else
+                glideStep = 0.0;
+
             //phase = 0.0;
             adsr.noteOn();
         }
-        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
-        {
-            adsr.noteOff();
-        }
     }
 
+    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+
     // === Synthesis loop ===
-    if (adsr.isActive())
+    if (adsr.isActive() && e != nullptr)
     {
         for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
+            e->animationPlaceholder.setEnvelopeLevel(env);
+            // Update frequency if we're still gliding
+            if (glideSamplesLeft > 0)
+            {
+                glideCurrentFreq += glideStep;
+                --glideSamplesLeft;
+            }
+            else
+            {
+                glideCurrentFreq = glideTargetFreq;
+            }
+
+            // Phase increment based on current glide freq
+            phaseIncrement = glideCurrentFreq / getSampleRate();
+
             float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
-            float currentSample = rawSample * env;
+
+            float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * chirpPhase) * chirpDepth);
+            chirpPhase += chirpRate / sampleRate;
+            if (chirpPhase >= 1.0f)
+                chirpPhase -= 1.0f;
+
+            float currentSample = rawSample * env * am;
 
             phase += phaseIncrement;
             if (phase >= 1.0)
