@@ -100,16 +100,24 @@ private:
     int flutterCounter = 0;
     int flutterUpdateInterval = 0;
 
+    float tremoloPhase = 0.0f;
+
     // === Saw Filter and FX ===
     juce::dsp::StateVariableTPTFilter<float> sawFilter;
     float sawFilterEnvelope = 0.0f;
     float sawFilterEnvIncrement = 0.0f;
 
     juce::dsp::WaveShaper<float> sawDistortion;
+    juce::dsp::StateVariableTPTFilter<float> sawPostFilter;
+
 
     float amPhase = 0.0f;
     float amRate = 30.0f; // Hz
     float amDepth = 0.3f; // Strength of modulation
+
+    float sweepRate = 0.0f;
+    float sweepDepth = 0.0f;
+    float sweepPhase = 0.0f;
 
     // === Square Filter and FX ===
 

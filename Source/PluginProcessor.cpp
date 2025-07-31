@@ -32,15 +32,32 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
         std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 1.0f, 0.2f),
         std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
         std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f),
+
             // === Sine Params ===
         std::make_unique<juce::AudioParameterFloat>("vibratoRate", "Vibrato Rate", 0.0f, 10.0f, 5.0f),
         std::make_unique<juce::AudioParameterFloat>("vibratoDepth", "Vibrato Depth", 0.0f, 0.05f, 0.001f),
         std::make_unique<juce::AudioParameterFloat>("flutterDepth", "Flutter Depth", 0.0f, 0.05f, 0.01f),
-        std::make_unique<juce::AudioParameterFloat>("flutterRate",  "Flutter Rate",  0.1f, 20.0f, 5.0f),
+        std::make_unique<juce::AudioParameterFloat>("flutterRate",  "Flutter Rate",  0.0f, 20.0f, 5.0f),
+        std::make_unique<juce::AudioParameterFloat>("tremoloDepth", "Tremolo Depth", 0.0f, 1.0f, 0.5f),
+        std::make_unique<juce::AudioParameterFloat>("tremoloRate",  "Tremolo Rate",  0.0f, 20.0f, 4.0f),
+
             // === Saw Params ===
         std::make_unique<juce::AudioParameterFloat>(
-            "sawDistortionAmount", "Saw Distortion",
-            juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f), 3.0f)
+            "sawDistortionAmount", "Saw Distortion Amount",
+            juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f), 3.0f
+        ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawDistortionTone", "Saw Distortion Tone",
+            juce::NormalisableRange<float>(0.0f, 8000.0f, 1.0f), 5000.0f
+        ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawSweepRate", "Sweep Rate",
+            juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f), 2.0f
+        ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawSweepDepth", "Sweep Depth",
+            juce::NormalisableRange<float>(50.0f, 3000.0f, 1.0f), 1000.0f
+        )
         })
 #endif
 {
@@ -142,9 +159,9 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     sineFilter.reset();
     sineFilter.prepare(sineSpec);
-    sineFilter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
+    sineFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
     sineFilter.setCutoffFrequency(1000.0f);
-    sineFilter.setResonance(0.3f);
+    sineFilter.setResonance(0.8f);
 
     juce::dsp::ProcessSpec sawSpec;
     sawSpec.sampleRate = sampleRate;
@@ -227,8 +244,8 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         default: buffer.clear(); break;
     }
 
-    /*if (pushAudioToScope)
-        pushAudioToScope(buffer);*/
+    if (pushAudioToScope)
+        pushAudioToScope(buffer);
 
 	midiMessages.clear();
 
@@ -275,6 +292,9 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
     vibratoRate = *parameters.getRawParameterValue("vibratoRate");
     vibratoDepth = *parameters.getRawParameterValue("vibratoDepth");
 
+    float tremoloRate = *parameters.getRawParameterValue("tremoloRate");
+    float tremoloDepth = *parameters.getRawParameterValue("tremoloDepth");
+
     float cutoff = 300.0f + sinefilterEnvelope * 4000.0f;
     sineFilter.setCutoffFrequency(cutoff);
 
@@ -288,8 +308,8 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
             midiNote = msg.getNoteNumber();
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
             phaseIncrement = freq / currentSampleRate;
-            phase = 0.0;
-            sinefilterEnvelope = 1.0f;
+            //phase = 0.0;
+            //sinefilterEnvelope = 1.0f;
             sineFilterEnvIncrement = 1.0f / (getSampleRate() * 0.25f); // ~250ms decay
 
             adsr.noteOn();
@@ -329,6 +349,13 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
             // Phase increment with vibrato and flutter
             double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato + flutter);
 
+            // Amplitude modulation
+            float tremolo = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * tremoloPhase) * tremoloDepth);
+            tremoloPhase += tremoloRate / currentSampleRate;
+            if (tremoloPhase >= 1.0f)
+                tremoloPhase -= 1.0f;
+
+
             // Sine wave generation
             float rawSine = std::sin(2.0 * juce::MathConstants<double>::pi * phase);
             phase += modulatedPhaseInc;
@@ -348,7 +375,7 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
             sineFilter.setCutoffFrequency(cutoff);
 
             // Apply filter to sine wave
-            currentSample = sineFilter.processSample(0, rawSine) * env;
+            currentSample = sineFilter.processSample(0, rawSine) * env * tremolo;
 
             for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
                 buffer.setSample(channel, sample, currentSample);
@@ -356,7 +383,8 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
     }
     else
     {
-        buffer.clear();
+        if (!adsr.isActive())
+            buffer.clear();
     }
 }
 
@@ -382,7 +410,7 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
 
             // Trigger filter envelope
             sawFilterEnvelope = 1.0f;
-            sawFilterEnvIncrement = 1.0f / (getSampleRate() * 0.25f); // 250ms decay
+            sawFilterEnvIncrement = 1.0f / (sampleRate * 0.25f); // 250ms decay
         }
         else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
         {
@@ -393,11 +421,14 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
     // === Synthesis loop ===
     if (adsr.isActive())
     {
+        float toneCutoff = *parameters.getRawParameterValue("sawDistortionTone");
+        sawPostFilter.setCutoffFrequency(toneCutoff);
+
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
             float env = adsr.getNextSample();
 
-            // Saw wave
+            // Generate saw wave
             float rawSaw = 2.0f * static_cast<float>(phase) - 1.0f;
             phase += phaseIncrement;
             if (phase >= 1.0)
@@ -411,22 +442,25 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
                     sawFilterEnvelope = 0.0f;
             }
 
-            // Filter modulation
-            float cutoff = 600.0f + sawFilterEnvelope * 3000.0f;
-            sawFilter.setCutoffFrequency(cutoff);
-
+            // Pre-filter
+            float preCutoff = 600.0f + sawFilterEnvelope * 3000.0f;
+            sawFilter.setCutoffFrequency(preCutoff);
             float filtered = sawFilter.processSample(0, rawSaw) * env;
 
+            // Distortion
             float distortionAmount = *parameters.getRawParameterValue("sawDistortionAmount");
             float distorted = std::tanh(filtered * distortionAmount);
 
-            // Amplitude modulation for growling texture
+            // Post-filter (tone shaping)
+            float postFiltered = sawPostFilter.processSample(0, distorted);
+
+            // Amplitude modulation for growl
             float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * amPhase) * amDepth);
             amPhase += amRate / getSampleRate();
             if (amPhase >= 1.0f)
                 amPhase -= 1.0f;
 
-            float finalSample = distorted * env * am;
+            float finalSample = postFiltered * env * am;
 
             for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
                 buffer.setSample(channel, sample, finalSample);
@@ -436,6 +470,7 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
     {
         buffer.clear();
     }
+
 }
 
 void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)

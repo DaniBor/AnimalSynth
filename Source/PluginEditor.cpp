@@ -16,7 +16,7 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
-    //audioScope = std::make_unique<ScaledVisualiserComponent>(2048);
+    audioScope = std::make_unique<ScaledVisualiserComponent>(1024);
 
     setSize (500, 375);
 
@@ -65,7 +65,7 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     addAndMakeVisible(polyMalButton);
 
     waveVisualizer.setText("Oscillator");
-    addAndMakeVisible(waveVisualizer);
+    //addAndMakeVisible(waveVisualizer);
 
     // Attach sliders to parameters
     vibratoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -80,20 +80,34 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     flutterRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "flutterRate", flutterRateSlider);
 
-    sawDistortionAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "sawDistortionAmount", sawDistortionSlider);
+    tremoloDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "tremoloDepth", tremoloDepthSlider);
 
-    /*
+
+    tremoloRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "tremoloRate", tremoloRateSlider);
+
+    sawDistortionAmountAttachment = std::make_unique<SliderAttachment>(
+        audioProcessor.parameters, "sawDistortionAmount", sawDistortionAmountSlider
+    );
+
+    sawDistortionToneAttachment = std::make_unique<SliderAttachment>(
+        audioProcessor.parameters, "sawDistortionTone", sawDistortionToneSlider
+    );
+
+    
     audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
         {
-            audioScope->pushBuffer(b);
+            if(audioScope)
+                audioScope->pushBuffer(b);
         };
 
-    addAndMakeVisible(*audioScope);*/
+    addAndMakeVisible(*audioScope);
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
 {
+    audioProcessor.pushAudioToScope = nullptr;
 }
 
 //==============================================================================
@@ -112,12 +126,12 @@ void AnimalSynthAudioProcessorEditor::resized()
 
 
     // Reserve left and right portions
-    auto waveformColumn = topBar.removeFromLeft(200); // 200px wide (left side)
+    auto waveformColumn = topBar.removeFromLeft(220); // 200px wide (left side)
     auto animationBounds = topBar.removeFromRight(220).withHeight(160); // animation right side
 
     waveformSelector.setBounds(waveformColumn.removeFromTop(40));
     waveformColumn.removeFromTop(10);
-    waveVisualizer.setBounds(waveformColumn.removeFromTop(110));
+    audioScope->setBounds(waveformColumn.removeFromTop(110));
     
     animationPlaceholder.setBounds(animationBounds);
 
@@ -159,7 +173,19 @@ void AnimalSynthAudioProcessorEditor::resized()
     flutterRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
     flutterDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
 
-    sawDistortionSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
+    tremoloRateSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
+    tremoloDepthSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
+
+    sawDistortionAmountSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
+    sawDistortionToneSlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
+
+    // Next two positions after distortion sliders
+    sawSweepRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
+    sawSweepDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+
+
+
+
     squareSlider.setBounds(topLeft);
     triangleSlider.setBounds(topLeft);
 }
@@ -211,30 +237,69 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sineFXPanel.addAndMakeVisible(flutterDepthSlider);
     sineFXPanel.addAndMakeVisible(flutterDepthLabel);
 
-    
-
     // Flutter Rate
     flutterRateSlider.setSliderStyle(juce::Slider::Rotary);
     flutterRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    flutterRateLabel.setText("Flut Depth", juce::dontSendNotification);
+    flutterRateLabel.setText("Flut Rate", juce::dontSendNotification);
     flutterRateLabel.attachToComponent(&flutterRateSlider, false);
     sineFXPanel.addAndMakeVisible(flutterRateSlider);
     sineFXPanel.addAndMakeVisible(flutterRateLabel);
     
+    //Tremolo Depth
+    tremoloDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    tremoloDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    tremoloDepthLabel.setText("Trem Depth", juce::dontSendNotification);
+    tremoloDepthLabel.attachToComponent(&tremoloDepthSlider, false);
+    sineFXPanel.addAndMakeVisible(tremoloDepthSlider);
+    sineFXPanel.addAndMakeVisible(tremoloDepthLabel);
+
+    //Tremolo Rate
+    tremoloRateSlider.setSliderStyle(juce::Slider::Rotary);
+    tremoloRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    tremoloRateLabel.setText("Trem Rate", juce::dontSendNotification);
+    tremoloRateLabel.attachToComponent(&tremoloRateSlider, false);
+    sineFXPanel.addAndMakeVisible(tremoloRateSlider);
+    sineFXPanel.addAndMakeVisible(tremoloRateLabel);
 
 
-
-
-
-
-    
     // === Saw Panel ===
-    sawDistortionSlider.setSliderStyle(juce::Slider::Rotary);
-    sawDistortionSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawDistortionLabel.setText("Distortion", juce::dontSendNotification);
-    sawDistortionLabel.attachToComponent(&sawDistortionSlider, false);
-    sawFXPanel.addAndMakeVisible(sawDistortionSlider);
-    sawFXPanel.addAndMakeVisible(sawDistortionLabel);
+    // Distortion Amount
+    sawDistortionAmountSlider.setSliderStyle(juce::Slider::Rotary);
+    sawDistortionAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawDistortionAmountLabel.setText("Dis Amount", juce::dontSendNotification);
+    sawDistortionAmountLabel.attachToComponent(&sawDistortionAmountSlider, false);
+    sawFXPanel.addAndMakeVisible(sawDistortionAmountSlider);
+    sawFXPanel.addAndMakeVisible(sawDistortionAmountLabel);
+
+    // Distortion Tone
+    sawDistortionToneSlider.setSliderStyle(juce::Slider::Rotary);
+    sawDistortionToneSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawDistortionToneLabel.setText("Dis Tone", juce::dontSendNotification);
+    sawDistortionToneLabel.attachToComponent(&sawDistortionToneSlider, false);
+    sawFXPanel.addAndMakeVisible(sawDistortionToneSlider);
+    sawFXPanel.addAndMakeVisible(sawDistortionToneLabel);
+
+    // === Sweep Rate ===
+    sawSweepRateSlider.setSliderStyle(juce::Slider::Rotary);
+    sawSweepRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawSweepRateLabel.setText("Sweep Rate", juce::dontSendNotification);
+    sawSweepRateLabel.attachToComponent(&sawSweepRateSlider, false);
+    sawFXPanel.addAndMakeVisible(sawSweepRateSlider);
+    sawFXPanel.addAndMakeVisible(sawSweepRateLabel);
+
+    sawSweepRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sawSweepRate", sawSweepRateSlider);
+
+    // === Sweep Depth ===
+    sawSweepDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    sawSweepDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawSweepDepthLabel.setText("Sweep Depth", juce::dontSendNotification);
+    sawSweepDepthLabel.attachToComponent(&sawSweepDepthSlider, false);
+    sawFXPanel.addAndMakeVisible(sawSweepDepthSlider);
+    sawFXPanel.addAndMakeVisible(sawSweepDepthLabel);
+
+    sawSweepDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sawSweepDepth", sawSweepDepthSlider);
 
 
     // === Square Panel ===

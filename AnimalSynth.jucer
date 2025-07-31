@@ -4,6 +4,7 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20"
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
+    <GROUP id="{DA9539E0-2324-EE4F-C55B-D8A5C7C72B82}" name="assets"/>
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
       <FILE id="WEqhXU" name="AnimationDisplayComponent.h" compile="0" resource="0"
             file="Source/AnimationDisplayComponent.h"/>

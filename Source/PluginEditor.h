@@ -55,11 +55,30 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterDepthAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterRateAttachment;
 
+    juce::Slider tremoloDepthSlider, tremoloRateSlider;
+    juce::Label tremoloDepthLabel, tremoloRateLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tremoloDepthAttachment, tremoloRateAttachment;
+
+
 
     // === Saw Panel Elements ===
-    juce::Slider sawDistortionSlider;
-    juce::Label sawDistortionLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionAttachment;
+    juce::Slider sawDistortionAmountSlider;
+    juce::Label sawDistortionAmountLabel;
+    juce::Slider sawDistortionToneSlider;
+    juce::Label sawDistortionToneLabel;
+    std::unique_ptr < juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionAmountAttachment;
+    std::unique_ptr < juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionToneAttachment;
+
+    // Saw Bandpass Sweep Effect
+    juce::Slider sawSweepRateSlider;
+    juce::Label  sawSweepRateLabel;
+    juce::Slider sawSweepDepthSlider;
+    juce::Label  sawSweepDepthLabel;
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawSweepRateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawSweepDepthAttachment;
+
+
 
 
     // === Square Panel Elements ===
