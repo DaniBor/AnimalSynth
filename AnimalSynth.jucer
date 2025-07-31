@@ -5,6 +5,72 @@
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
+      <GROUP id="{9D74C4CB-B8FC-BE19-AC42-421AEBD9ED6B}" name="dog">
+        <FILE id="RiWO91" name="dog_0.png" compile="0" resource="1" file="Source/assets/dog/dog_0.png"/>
+        <FILE id="gKQTyd" name="dog_1.png" compile="0" resource="1" file="Source/assets/dog/dog_1.png"/>
+        <FILE id="Z0ZU98" name="dog_2.png" compile="0" resource="1" file="Source/assets/dog/dog_2.png"/>
+        <FILE id="XVwFAx" name="dog_3.png" compile="0" resource="1" file="Source/assets/dog/dog_3.png"/>
+        <FILE id="M8KYL4" name="dog_4.png" compile="0" resource="1" file="Source/assets/dog/dog_4.png"/>
+        <FILE id="Z95VLt" name="dog_5.png" compile="0" resource="1" file="Source/assets/dog/dog_5.png"/>
+        <FILE id="FFm2VG" name="dog_6.png" compile="0" resource="1" file="Source/assets/dog/dog_6.png"/>
+        <FILE id="sKZNSv" name="dog_7.png" compile="0" resource="1" file="Source/assets/dog/dog_7.png"/>
+        <FILE id="K87sZL" name="dog_8.png" compile="0" resource="1" file="Source/assets/dog/dog_8.png"/>
+        <FILE id="J0RbeI" name="dog_9.png" compile="0" resource="1" file="Source/assets/dog/dog_9.png"/>
+        <FILE id="QIllQr" name="dog_10.png" compile="0" resource="1" file="Source/assets/dog/dog_10.png"/>
+        <FILE id="Vqssgz" name="dog_11.png" compile="0" resource="1" file="Source/assets/dog/dog_11.png"/>
+        <FILE id="qwjZjl" name="dog_12.png" compile="0" resource="1" file="Source/assets/dog/dog_12.png"/>
+        <FILE id="j1rZ18" name="dog_13.png" compile="0" resource="1" file="Source/assets/dog/dog_13.png"/>
+        <FILE id="lbddVj" name="dog_14.png" compile="0" resource="1" file="Source/assets/dog/dog_14.png"/>
+        <FILE id="qtgMTF" name="dog_15.png" compile="0" resource="1" file="Source/assets/dog/dog_15.png"/>
+        <FILE id="AVIOGk" name="dog_16.png" compile="0" resource="1" file="Source/assets/dog/dog_16.png"/>
+        <FILE id="ApItL3" name="dog_17.png" compile="0" resource="1" file="Source/assets/dog/dog_17.png"/>
+        <FILE id="LqJWKr" name="dog_18.png" compile="0" resource="1" file="Source/assets/dog/dog_18.png"/>
+        <FILE id="E4B4NJ" name="dog_19.png" compile="0" resource="1" file="Source/assets/dog/dog_19.png"/>
+        <FILE id="nH5m2e" name="dog_20.png" compile="0" resource="1" file="Source/assets/dog/dog_20.png"/>
+        <FILE id="KBQycq" name="dog_21.png" compile="0" resource="1" file="Source/assets/dog/dog_21.png"/>
+        <FILE id="wuBGac" name="dog_22.png" compile="0" resource="1" file="Source/assets/dog/dog_22.png"/>
+        <FILE id="NFWUEp" name="dog_23.png" compile="0" resource="1" file="Source/assets/dog/dog_23.png"/>
+        <FILE id="FpqEyz" name="dog_24.png" compile="0" resource="1" file="Source/assets/dog/dog_24.png"/>
+        <FILE id="vPlEP9" name="dog_25.png" compile="0" resource="1" file="Source/assets/dog/dog_25.png"/>
+        <FILE id="yX8ryg" name="dog_26.png" compile="0" resource="1" file="Source/assets/dog/dog_26.png"/>
+        <FILE id="gvva1Z" name="dog_27.png" compile="0" resource="1" file="Source/assets/dog/dog_27.png"/>
+        <FILE id="NFoKL7" name="dog_28.png" compile="0" resource="1" file="Source/assets/dog/dog_28.png"/>
+        <FILE id="sz2CoP" name="dog_29.png" compile="0" resource="1" file="Source/assets/dog/dog_29.png"/>
+        <FILE id="Bp0g1z" name="dog_30.png" compile="0" resource="1" file="Source/assets/dog/dog_30.png"/>
+        <FILE id="h51FiT" name="dog_31.png" compile="0" resource="1" file="Source/assets/dog/dog_31.png"/>
+        <FILE id="EKf1HM" name="dog_32.png" compile="0" resource="1" file="Source/assets/dog/dog_32.png"/>
+        <FILE id="I5EYUA" name="dog_33.png" compile="0" resource="1" file="Source/assets/dog/dog_33.png"/>
+        <FILE id="hvoN1j" name="dog_34.png" compile="0" resource="1" file="Source/assets/dog/dog_34.png"/>
+        <FILE id="uz6JUz" name="dog_35.png" compile="0" resource="1" file="Source/assets/dog/dog_35.png"/>
+        <FILE id="X38PJF" name="dog_36.png" compile="0" resource="1" file="Source/assets/dog/dog_36.png"/>
+        <FILE id="mo3jEL" name="dog_37.png" compile="0" resource="1" file="Source/assets/dog/dog_37.png"/>
+        <FILE id="OfPYUK" name="dog_38.png" compile="0" resource="1" file="Source/assets/dog/dog_38.png"/>
+        <FILE id="f6ksdI" name="dog_39.png" compile="0" resource="1" file="Source/assets/dog/dog_39.png"/>
+        <FILE id="Kd7av2" name="dog_40.png" compile="0" resource="1" file="Source/assets/dog/dog_40.png"/>
+        <FILE id="Ct5JQ5" name="dog_41.png" compile="0" resource="1" file="Source/assets/dog/dog_41.png"/>
+        <FILE id="nEDCUV" name="dog_42.png" compile="0" resource="1" file="Source/assets/dog/dog_42.png"/>
+        <FILE id="g4ON3X" name="dog_43.png" compile="0" resource="1" file="Source/assets/dog/dog_43.png"/>
+        <FILE id="GQqaan" name="dog_44.png" compile="0" resource="1" file="Source/assets/dog/dog_44.png"/>
+        <FILE id="FLD8Sf" name="dog_45.png" compile="0" resource="1" file="Source/assets/dog/dog_45.png"/>
+        <FILE id="Hz8bq7" name="dog_46.png" compile="0" resource="1" file="Source/assets/dog/dog_46.png"/>
+        <FILE id="RMxIpS" name="dog_47.png" compile="0" resource="1" file="Source/assets/dog/dog_47.png"/>
+        <FILE id="da8NyL" name="dog_48.png" compile="0" resource="1" file="Source/assets/dog/dog_48.png"/>
+        <FILE id="tJakQd" name="dog_49.png" compile="0" resource="1" file="Source/assets/dog/dog_49.png"/>
+        <FILE id="X3dCGN" name="dog_50.png" compile="0" resource="1" file="Source/assets/dog/dog_50.png"/>
+        <FILE id="Dr6rV1" name="dog_51.png" compile="0" resource="1" file="Source/assets/dog/dog_51.png"/>
+        <FILE id="hDTxFe" name="dog_52.png" compile="0" resource="1" file="Source/assets/dog/dog_52.png"/>
+        <FILE id="adTzX7" name="dog_53.png" compile="0" resource="1" file="Source/assets/dog/dog_53.png"/>
+        <FILE id="eIdZWW" name="dog_54.png" compile="0" resource="1" file="Source/assets/dog/dog_54.png"/>
+        <FILE id="adrCA9" name="dog_55.png" compile="0" resource="1" file="Source/assets/dog/dog_55.png"/>
+        <FILE id="OtWVc2" name="dog_56.png" compile="0" resource="1" file="Source/assets/dog/dog_56.png"/>
+        <FILE id="sWImyo" name="dog_57.png" compile="0" resource="1" file="Source/assets/dog/dog_57.png"/>
+        <FILE id="P6ELqp" name="dog_58.png" compile="0" resource="1" file="Source/assets/dog/dog_58.png"/>
+        <FILE id="BeNabd" name="dog_59.png" compile="0" resource="1" file="Source/assets/dog/dog_59.png"/>
+        <FILE id="rz2GmQ" name="dog_60.png" compile="0" resource="1" file="Source/assets/dog/dog_60.png"/>
+      </GROUP>
+      <GROUP id="{954C002F-6482-7CE1-AAD8-5B3874A830A7}" name="logo">
+        <FILE id="XoV0np" name="logo_0.png" compile="0" resource="1" file="Source/assets/logo/logo_0.png"/>
+      </GROUP>
       <GROUP id="{44B4726D-F0CA-4CB0-DECA-FDB2FCD7D20D}" name="bird">
         <FILE id="n9FsiC" name="bird_0.png" compile="0" resource="1" file="Source/assets/bird/bird_0.png"/>
         <FILE id="g0V1bb" name="bird_1.png" compile="0" resource="1" file="Source/assets/bird/bird_1.png"/>

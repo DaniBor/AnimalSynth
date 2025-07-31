@@ -56,6 +56,7 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     addAndMakeVisible(triangleFXPanel);
 
     animationPlaceholder.setNewAnimal(0);
+    polyMalButton.setNewAnimal(99);
 
     animationPlaceholder.setInterceptsMouseClicks(false, false);
     animationPlaceholder.setText("Animation Placeholder");
@@ -197,6 +198,9 @@ void AnimalSynthAudioProcessorEditor::resized()
 
     squareBitcrushRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
     squareBitcrushDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+
+    barkFilterFreqSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
+    barkFilterResSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
 
     
 
@@ -368,6 +372,26 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
     squareBitcrushDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "squareBitcrushDepth", squareBitcrushDepthSlider);
+
+    barkFilterFreqSlider.setSliderStyle(juce::Slider::Rotary);
+    barkFilterFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    barkFilterFreqLabel.setText("Bark Freq", juce::dontSendNotification);
+    barkFilterFreqLabel.attachToComponent(&barkFilterFreqSlider, false);
+    squareFXPanel.addAndMakeVisible(barkFilterFreqSlider);
+    squareFXPanel.addAndMakeVisible(barkFilterFreqLabel);
+
+    barkFilterFreqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "barkFilterFreq", barkFilterFreqSlider);
+
+    barkFilterResSlider.setSliderStyle(juce::Slider::Rotary);
+    barkFilterResSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    barkFilterResLabel.setText("Bark Res", juce::dontSendNotification);
+    barkFilterResLabel.attachToComponent(&barkFilterResSlider, false);
+    squareFXPanel.addAndMakeVisible(barkFilterResSlider);
+    squareFXPanel.addAndMakeVisible(barkFilterResLabel);
+
+    barkFilterResAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "barkFilterResonance", barkFilterResSlider);
 
 
     // === Triangle Panel ===

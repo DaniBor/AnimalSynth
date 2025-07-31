@@ -127,6 +127,10 @@ private:
     float lastBitcrushedSample = 0.0f;
     int bitcrushCounter = 0;
 
+    juce::dsp::StateVariableTPTFilter<float> barkFilter;
+    float barkFilterEnvelope = 0.0f;
+    float barkFilterDecayRate = 0.0f;
+
     // === Triangle Filter and FX ===
     double glideStartFreq = 0.0f;
     double glideTargetFreq = 0.0f;

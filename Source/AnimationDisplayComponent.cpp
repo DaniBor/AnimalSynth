@@ -83,8 +83,9 @@ void AnimationDisplayComponent::setNewAnimal(int waveformIndex)
     {
     case 0: loadFrames("wolf"); break;     // Sine
     case 1: loadFrames("bear"); break;      // Saw
-    case 2: loadFrames("bear"); break;    // Square
+    case 2: loadFrames("dog"); break;    // Square
     case 3: loadFrames("bird"); break;     // Triangle
+    case 99: loadFrames("logo"); break;
     default: loadFrames("bear"); break;
     }
 }

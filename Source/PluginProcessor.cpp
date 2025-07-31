@@ -78,6 +78,15 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "squareBitcrushDepth", "Bitcrush Depth",
             juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 16.0f // Bits
         ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "barkFilterFreq", "Bark Freq",
+            juce::NormalisableRange<float>(300.0f, 3000.0f, 1.0f), 800.0f
+        ),
+
+        std::make_unique<juce::AudioParameterFloat>(
+            "barkFilterResonance", "Bark Res",
+            juce::NormalisableRange<float>(0.1f, 2.0f, 0.01f), 1.0f
+        ),
 
             // === Triangle Params ===
         std::make_unique<juce::AudioParameterFloat>("triGlideTime", "Glide Time", 0.0f, 0.2f, 0.05f),
@@ -226,6 +235,19 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
         static_cast<juce::uint32>(samplesPerBlock),
         static_cast<juce::uint32>(getTotalNumOutputChannels())
         });
+
+
+    juce::dsp::ProcessSpec spec{
+    sampleRate,
+    static_cast<juce::uint32>(samplesPerBlock),
+    static_cast<juce::uint32>(getTotalNumOutputChannels())
+    };
+
+    barkFilter.reset();
+    barkFilter.prepare(spec);
+    barkFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+    barkFilter.setCutoffFrequency(800.0f);  // Default
+    barkFilter.setResonance(1.0f);
 
     int waveformIndex = *parameters.getRawParameterValue("waveform");
 
@@ -560,27 +582,27 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
         {
             midiNote = msg.getNoteNumber();
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
-
             phaseIncrement = freq / sampleRate;
-            //phase = 0.0;
-            bitcrushCounter = 0;
+            phase = 0.0;
             adsr.noteOn();
 
-            // --- Punch envelope init ---
-            float punchAmt = *parameters.getRawParameterValue("squarePunchAmount");
-            float punchDecayTime = *parameters.getRawParameterValue("squarePunchDecay");
+            squarePunchLevel = 1.0f;
 
-            squarePunchLevel = punchAmt;
-            squarePunchDecayRate = punchAmt / (sampleRate * punchDecayTime);
+            // Start the bark envelope only on note-on
+            barkFilterEnvelope = 1.0f;
+            barkFilterDecayRate = 1.0f / (sampleRate * 0.15f);
         }
     }
 
+    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+
     // === Synthesis loop ===
-    if (adsr.isActive())
+    if (adsr.isActive() && e != nullptr)
     {
         for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
+            e->animationPlaceholder.setEnvelopeLevel(env);
             float rawSample = (phase < 0.5f) ? 1.0f : -1.0f;
 
             // --- Punch Envelope ---
@@ -615,6 +637,27 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
 
                 bitcrushCounter = (bitcrushCounter + 1) % samplesPerHold;
             }
+
+
+            // Bark filter envelope decay
+            if (barkFilterEnvelope > 0.0f)
+            {
+                barkFilterEnvelope -= barkFilterDecayRate;
+                if (barkFilterEnvelope < 0.0f)
+                    barkFilterEnvelope = 0.0f;
+            }
+
+            // Set dynamic bandpass cutoff and resonance
+            float baseFreq = *parameters.getRawParameterValue("barkFilterFreq");
+            float res = *parameters.getRawParameterValue("barkFilterResonance");
+            float modulatedCutoff = baseFreq + barkFilterEnvelope * 2000.0f; // Sweep range
+
+            barkFilter.setCutoffFrequency(modulatedCutoff);
+            barkFilter.setResonance(res);
+
+            // Apply to sample
+            currentSample = barkFilter.processSample(0, currentSample);
+
 
             // --- Phase update ---
             phase += phaseIncrement;
