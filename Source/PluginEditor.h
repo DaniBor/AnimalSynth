@@ -102,6 +102,13 @@ public:
     juce::Label triChirpRateLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triChirpRateAttachment;
 
+    juce::Slider triEchoTimeSlider;
+    juce::Label triEchoTimeLabel;
+    juce::Slider triEchoMixSlider;
+    juce::Label triEchoMixLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triEchoTimeAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triEchoMixAttachment;
+
 
 
 private:

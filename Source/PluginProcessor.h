@@ -133,6 +133,9 @@ private:
     float chirpRate = 0.0f;
     float chirpDepth = 0.0f;
 
+    juce::AudioBuffer<float> echoBuffer;
+    int echoWritePosition = 0;
+
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AnimalSynthAudioProcessor)

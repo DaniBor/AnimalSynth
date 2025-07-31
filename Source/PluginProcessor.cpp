@@ -72,12 +72,18 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "triChirpRate", "Chirp Rate",
             juce::NormalisableRange<float>(1.0f, 50.0f, 0.1f), 20.0f // Hz
         ),
-
         std::make_unique<juce::AudioParameterFloat>(
             "triChirpDepth", "Chirp Depth",
             juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f // 0 to full modulation
         ),
-
+        std::make_unique<juce::AudioParameterFloat>(
+            "triEchoTime", "Echo Time",
+            juce::NormalisableRange<float>(10.0f, 250.0f, 1.0f), 80.0f
+        ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "triEchoMix", "Echo Mix",
+            juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.3f
+        )
         })
 #endif
 {
@@ -204,6 +210,11 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
         });
 
     int waveformIndex = *parameters.getRawParameterValue("waveform");
+
+    echoBuffer.setSize(getTotalNumOutputChannels(), (int)(getSampleRate() * 0.5)); // 500 ms max
+    echoBuffer.clear();
+    echoWritePosition = 0;
+
 
     AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     if (e != nullptr) {
@@ -609,11 +620,18 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
     // === Synthesis loop ===
     if (adsr.isActive() && e != nullptr)
     {
+        float echoTimeMs = *parameters.getRawParameterValue("triEchoTime");
+        float echoMix = *parameters.getRawParameterValue("triEchoMix");
+
+        int delaySamples = static_cast<int>((echoTimeMs / 1000.0f) * sampleRate);
+        int echoBufferLength = echoBuffer.getNumSamples();
+
         for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
             e->animationPlaceholder.setEnvelopeLevel(env);
-            // Update frequency if we're still gliding
+
+            // Glide update
             if (glideSamplesLeft > 0)
             {
                 glideCurrentFreq += glideStep;
@@ -624,24 +642,40 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
                 glideCurrentFreq = glideTargetFreq;
             }
 
-            // Phase increment based on current glide freq
-            phaseIncrement = glideCurrentFreq / getSampleRate();
+            phaseIncrement = glideCurrentFreq / sampleRate;
 
             float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
 
+            // Chirp (AM)
             float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * chirpPhase) * chirpDepth);
             chirpPhase += chirpRate / sampleRate;
             if (chirpPhase >= 1.0f)
                 chirpPhase -= 1.0f;
 
-            float currentSample = rawSample * env * am;
+            float drySample = rawSample * env * am;
 
-            phase += phaseIncrement;
-            if (phase >= 1.0)
-                phase -= 1.0;
-
+            // Echo
             for (int channel = 0; channel < numChannels; ++channel)
-                buffer.setSample(channel, sample, currentSample);
+            {
+                auto* echoData = echoBuffer.getWritePointer(channel);
+                int readPos = (echoWritePosition + echoBufferLength - delaySamples) % echoBufferLength;
+
+                float delayedSample = echoData[readPos];
+                float wetSample = (1.0f - echoMix) * drySample + echoMix * delayedSample;
+
+                // Write dry + feedback into echo buffer
+                echoData[echoWritePosition] = drySample + delayedSample * 0.4f; // feedback = 0.4
+
+                // Output mixed sample
+                buffer.setSample(channel, sample, wetSample);
+            }
+
+            // Update phase and delay write head
+            phase += phaseIncrement;
+            if (phase >= 1.0f)
+                phase -= 1.0f;
+
+            echoWritePosition = (echoWritePosition + 1) % echoBufferLength;
         }
     }
     else

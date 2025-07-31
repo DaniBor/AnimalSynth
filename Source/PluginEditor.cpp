@@ -197,6 +197,9 @@ void AnimalSynthAudioProcessorEditor::resized()
     triChirpRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
     triChirpDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
 
+    triEchoMixSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
+    triEchoTimeSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
+
 }
 
 
@@ -343,7 +346,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     triGlideDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "triGlideDepth", triGlideDepthSlider);
 
-    //Chirp Rate
+    // Chirp Rate
     triChirpRateSlider.setSliderStyle(juce::Slider::Rotary);
     triChirpRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     triChirpRateLabel.setText("Chirp Rate", juce::dontSendNotification);
@@ -354,9 +357,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     triChirpRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "triChirpRate", triChirpRateSlider);
 
-
-
-    //Chirp Depth
+    // Chirp Depth
     triChirpDepthSlider.setSliderStyle(juce::Slider::Rotary);
     triChirpDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     triChirpDepthLabel.setText("Chirp Depth", juce::dontSendNotification);
@@ -367,7 +368,27 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     triChirpDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "triChirpDepth", triChirpDepthSlider);
 
+    // Echo Time
+    triEchoTimeSlider.setSliderStyle(juce::Slider::Rotary);
+    triEchoTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triEchoTimeLabel.setText("Echo Time", juce::dontSendNotification);
+    triEchoTimeLabel.attachToComponent(&triEchoTimeSlider, false);
+    triangleFXPanel.addAndMakeVisible(triEchoTimeSlider);
+    triangleFXPanel.addAndMakeVisible(triEchoTimeLabel);
 
+    triEchoTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "triEchoTime", triEchoTimeSlider);
+
+    // Echo Mix
+    triEchoMixSlider.setSliderStyle(juce::Slider::Rotary);
+    triEchoMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    triEchoMixLabel.setText("Echo Mix", juce::dontSendNotification);
+    triEchoMixLabel.attachToComponent(&triEchoMixSlider, false);
+    triangleFXPanel.addAndMakeVisible(triEchoMixSlider);
+    triangleFXPanel.addAndMakeVisible(triEchoMixLabel);
+
+    triEchoMixAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "triEchoMix", triEchoMixSlider);
 
     updateEffectUI();
 }
