@@ -22,6 +22,13 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     setLookAndFeel(&customLookAndFeel);
 
+    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_jpg, BinaryData::background_jpgSize);
+
+    sineImage = juce::ImageCache::getFromMemory(BinaryData::wolfPanel_jpg, BinaryData::wolfPanel_jpgSize);
+    sawImage = juce::ImageCache::getFromMemory(BinaryData::bearPanel_jpg, BinaryData::bearPanel_jpgSize);
+    squareImage = juce::ImageCache::getFromMemory(BinaryData::dogPanel_jpg, BinaryData::dogPanel_jpgSize);
+    triangleImage = juce::ImageCache::getFromMemory(BinaryData::birdPanel_jpg, BinaryData::birdPanel_jpgSize);
+
     waveformSelector.addItem("Howl (Sine)", 1);
     waveformSelector.addItem("Growl (Saw)", 2);
     waveformSelector.addItem("Bark (Square)", 3);
@@ -50,9 +57,16 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     sustainAttachment = std::make_unique<SliderAttachment>(par, "sustain", sustainSlider);
     releaseAttachment = std::make_unique<SliderAttachment>(par, "release", releaseSlider);
 
+    sineFXPanel.setImage(sineImage);
     addAndMakeVisible(sineFXPanel);
+
+    sawFXPanel.setImage(sawImage);
     addAndMakeVisible(sawFXPanel);
+
+    squareFXPanel.setImage(squareImage);
     addAndMakeVisible(squareFXPanel);
+
+    triangleFXPanel.setImage(triangleImage);
     addAndMakeVisible(triangleFXPanel);
 
     animationPlaceholder.setNewAnimal(0);
@@ -66,35 +80,9 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     polyMalButton.setText("PolyMal");
     addAndMakeVisible(polyMalButton);
+    
 
-
-    // Attach sliders to parameters
-    vibratoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "vibratoRate", vibratoRateSlider);
-
-    vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
-
-    flutterDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "flutterDepth", flutterDepthSlider);
-
-    flutterRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "flutterRate", flutterRateSlider);
-
-    tremoloDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "tremoloDepth", tremoloDepthSlider);
-
-
-    tremoloRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "tremoloRate", tremoloRateSlider);
-
-    sawDistortionAmountAttachment = std::make_unique<SliderAttachment>(
-        audioProcessor.parameters, "sawDistortionAmount", sawDistortionAmountSlider
-    );
-
-    sawDistortionToneAttachment = std::make_unique<SliderAttachment>(
-        audioProcessor.parameters, "sawDistortionTone", sawDistortionToneSlider
-    );
+    
 
     
     audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
@@ -117,7 +105,10 @@ AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
 void AnimalSynthAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    if (backgroundImage.isValid())
+        g.drawImage(backgroundImage, getLocalBounds().toFloat());
+    else
+        g.fillAll(juce::Colours::black); // Fallback color
 }
 
 void AnimalSynthAudioProcessorEditor::resized()
@@ -138,7 +129,6 @@ void AnimalSynthAudioProcessorEditor::resized()
     
     animationPlaceholder.setBounds(animationBounds);
     
-
     // FX panel area
     auto fxBounds = bounds.removeFromTop(100);
     sineFXPanel.setBounds(fxBounds);
@@ -149,7 +139,7 @@ void AnimalSynthAudioProcessorEditor::resized()
     // Reserve bottom area for ADSR
     auto adsrAreaFull = bounds.removeFromBottom(60);
 
-    // Split into 75% (for ADSR sliders) and 25% (for second visual placeholder)
+    // ADSR and Logo area
     auto adsrArea = adsrAreaFull.removeFromLeft(adsrAreaFull.getWidth() * 3 / 4);
     auto adsrPlaceholderArea = adsrAreaFull; // Remaining 25%
 
@@ -167,52 +157,50 @@ void AnimalSynthAudioProcessorEditor::resized()
 
     // FX sliders
     const int fxSliderSize = 60;
-    const int fxSliderPadding = 15;
-
-    auto topLeft = juce::Rectangle<int>(fxSliderPadding, fxSliderPadding, fxSliderSize, fxSliderSize);
-
+    int sliderPadding = 20;
+    int yPos = 35;
 
     // === Sine Sliders ===
-    vibratoRateSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
-    vibratoDepthSlider.setBounds(10 + 15 + fxSliderSize, 30, fxSliderSize, fxSliderSize);
+    vibratoRateSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
+    vibratoDepthSlider.setBounds(10 + sliderPadding + fxSliderSize, yPos, fxSliderSize, fxSliderSize);
 
-    flutterRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
-    flutterDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+    flutterRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    flutterDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
-    tremoloRateSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
-    tremoloDepthSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
+    tremoloRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    tremoloDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
 
     // === Saw Sliders ===
-    sawDistortionAmountSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
-    sawDistortionToneSlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
+    sawDistortionAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
+    sawDistortionToneSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
-    sawSweepRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
-    sawSweepDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+    sawSweepRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    sawSweepDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
 
 
     // === Square Sliders ===
-    squarePunchAmountSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
-    squarePunchDecaySlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
+    squarePunchAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
+    squarePunchDecaySlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
-    squareBitcrushRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
-    squareBitcrushDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+    squareBitcrushRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    squareBitcrushDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
-    barkFilterFreqSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
-    barkFilterResSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
+    barkFilterFreqSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    barkFilterResSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
     
 
     // === Triangle Sliders ===
-    triGlideTimeSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
-    triGlideDepthSlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
+    triGlideTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
+    triGlideDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
-    triChirpRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
-    triChirpDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+    triChirpRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    triChirpDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
-    triEchoMixSlider.setBounds(10 + (15 + fxSliderSize) * 4, 30, fxSliderSize, fxSliderSize);
-    triEchoTimeSlider.setBounds(10 + (15 + fxSliderSize) * 5, 30, fxSliderSize, fxSliderSize);
+    triEchoMixSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    triEchoTimeSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
 }
 
@@ -238,7 +226,7 @@ void AnimalSynthAudioProcessorEditor::updateEffectUI()
 
 void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 {
-    // === Sine Panel ===
+    // ===== Sine Panel =====
     // Vibrato Rate
     vibratoRateSlider.setSliderStyle(juce::Slider::Rotary);
     vibratoRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -246,6 +234,9 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     vibratoRateLabel.attachToComponent(&vibratoRateSlider, false);
     sineFXPanel.addAndMakeVisible(vibratoRateSlider);
     sineFXPanel.addAndMakeVisible(vibratoRateLabel);
+
+    vibratoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "vibratoRate", vibratoRateSlider);
 
     // Vibrato Depth
     vibratoDepthSlider.setSliderStyle(juce::Slider::Rotary);
@@ -255,6 +246,9 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sineFXPanel.addAndMakeVisible(vibratoDepthSlider);
     sineFXPanel.addAndMakeVisible(vibratoDepthLabel);
 
+    vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
+
     // Flutter Depth
     flutterDepthSlider.setSliderStyle(juce::Slider::Rotary);
     flutterDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -263,6 +257,9 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sineFXPanel.addAndMakeVisible(flutterDepthSlider);
     sineFXPanel.addAndMakeVisible(flutterDepthLabel);
 
+    flutterDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "flutterDepth", flutterDepthSlider);
+
     // Flutter Rate
     flutterRateSlider.setSliderStyle(juce::Slider::Rotary);
     flutterRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -270,6 +267,9 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     flutterRateLabel.attachToComponent(&flutterRateSlider, false);
     sineFXPanel.addAndMakeVisible(flutterRateSlider);
     sineFXPanel.addAndMakeVisible(flutterRateLabel);
+
+    flutterRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "flutterRate", flutterRateSlider);
     
     //Tremolo Depth
     tremoloDepthSlider.setSliderStyle(juce::Slider::Rotary);
@@ -279,6 +279,9 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sineFXPanel.addAndMakeVisible(tremoloDepthSlider);
     sineFXPanel.addAndMakeVisible(tremoloDepthLabel);
 
+    tremoloDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "tremoloDepth", tremoloDepthSlider);
+
     //Tremolo Rate
     tremoloRateSlider.setSliderStyle(juce::Slider::Rotary);
     tremoloRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -287,8 +290,10 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sineFXPanel.addAndMakeVisible(tremoloRateSlider);
     sineFXPanel.addAndMakeVisible(tremoloRateLabel);
 
+    tremoloRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "tremoloRate", tremoloRateSlider);
 
-    // === Saw Panel ===
+    // ===== Saw Panel =====
     // Distortion Amount
     sawDistortionAmountSlider.setSliderStyle(juce::Slider::Rotary);
     sawDistortionAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -296,6 +301,9 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawDistortionAmountLabel.attachToComponent(&sawDistortionAmountSlider, false);
     sawFXPanel.addAndMakeVisible(sawDistortionAmountSlider);
     sawFXPanel.addAndMakeVisible(sawDistortionAmountLabel);
+
+    sawDistortionAmountAttachment = std::make_unique<SliderAttachment>(
+        audioProcessor.parameters, "sawDistortionAmount", sawDistortionAmountSlider);
 
     // Distortion Tone
     sawDistortionToneSlider.setSliderStyle(juce::Slider::Rotary);
@@ -305,7 +313,10 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawFXPanel.addAndMakeVisible(sawDistortionToneSlider);
     sawFXPanel.addAndMakeVisible(sawDistortionToneLabel);
 
-    // === Sweep Rate ===
+    sawDistortionToneAttachment = std::make_unique<SliderAttachment>(
+        audioProcessor.parameters, "sawDistortionTone", sawDistortionToneSlider);
+
+    // Sweep Rate
     sawSweepRateSlider.setSliderStyle(juce::Slider::Rotary);
     sawSweepRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     sawSweepRateLabel.setText("Sweep Rate", juce::dontSendNotification);
@@ -316,7 +327,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawSweepRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "sawSweepRate", sawSweepRateSlider);
 
-    // === Sweep Depth ===
+    // Sweep Depth
     sawSweepDepthSlider.setSliderStyle(juce::Slider::Rotary);
     sawSweepDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     sawSweepDepthLabel.setText("Sweep Depth", juce::dontSendNotification);
@@ -328,7 +339,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
         audioProcessor.parameters, "sawSweepDepth", sawSweepDepthSlider);
 
 
-    // === Square Panel ===
+    // ===== Square Panel =====
     // Punch Amount Slider
     squarePunchAmountSlider.setSliderStyle(juce::Slider::Rotary);
     squarePunchAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -394,7 +405,7 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
         audioProcessor.parameters, "barkFilterResonance", barkFilterResSlider);
 
 
-    // === Triangle Panel ===
+    // ===== Triangle Panel =====
     // Glide Time
     triGlideTimeSlider.setSliderStyle(juce::Slider::Rotary);
     triGlideTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);

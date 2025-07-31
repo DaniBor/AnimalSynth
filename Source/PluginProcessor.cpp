@@ -204,7 +204,6 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     flutterCounter = 0;
     flutterUpdateInterval = static_cast<int>(sampleRate / *parameters.getRawParameterValue("flutterRate"));
 
-
     juce::dsp::ProcessSpec sineSpec;
     sineSpec.sampleRate = currentSampleRate;
     sineSpec.maximumBlockSize = static_cast<juce::uint32> (getBlockSize());
@@ -226,6 +225,18 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     sawFilter.setResonance(0.9f);
     sawFilter.setCutoffFrequency(1200.0f); // Initial center
 
+    juce::dsp::ProcessSpec barkSpec{
+    sampleRate,
+    static_cast<juce::uint32>(samplesPerBlock),
+    static_cast<juce::uint32>(getTotalNumOutputChannels())
+    };
+
+    barkFilter.reset();
+    barkFilter.prepare(barkSpec);
+    barkFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+    barkFilter.setCutoffFrequency(800.0f);  // Default
+    barkFilter.setResonance(1.0f);
+
     sawDistortion.functionToUse = [](float x) {
         return std::tanh(x * 3.0f); // Soft clipping / saturation
         };
@@ -236,25 +247,11 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
         static_cast<juce::uint32>(getTotalNumOutputChannels())
         });
 
-
-    juce::dsp::ProcessSpec spec{
-    sampleRate,
-    static_cast<juce::uint32>(samplesPerBlock),
-    static_cast<juce::uint32>(getTotalNumOutputChannels())
-    };
-
-    barkFilter.reset();
-    barkFilter.prepare(spec);
-    barkFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
-    barkFilter.setCutoffFrequency(800.0f);  // Default
-    barkFilter.setResonance(1.0f);
-
     int waveformIndex = *parameters.getRawParameterValue("waveform");
 
     echoBuffer.setSize(getTotalNumOutputChannels(), (int)(getSampleRate() * 0.5)); // 500 ms max
     echoBuffer.clear();
     echoWritePosition = 0;
-
 
     AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     if (e != nullptr) {

@@ -5,6 +5,15 @@
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
+      <FILE id="pOEZzG" name="FXPanel.cpp" compile="1" resource="0" file="Source/FXPanel.cpp"/>
+      <FILE id="V266YU" name="FXPanel.h" compile="0" resource="0" file="Source/FXPanel.h"/>
+      <GROUP id="{A43232D3-C4D9-8F6F-3F8C-C88EF0C14233}" name="panels">
+        <FILE id="q3pwzG" name="background.jpg" compile="0" resource="1" file="Source/assets/panels/background.jpg"/>
+        <FILE id="J5zGBV" name="bearPanel.jpg" compile="0" resource="1" file="Source/assets/panels/bearPanel.jpg"/>
+        <FILE id="cb08mA" name="birdPanel.jpg" compile="0" resource="1" file="Source/assets/panels/birdPanel.jpg"/>
+        <FILE id="HJxyzK" name="dogPanel.jpg" compile="0" resource="1" file="Source/assets/panels/dogPanel.jpg"/>
+        <FILE id="KxTV08" name="wolfPanel.jpg" compile="0" resource="1" file="Source/assets/panels/wolfPanel.jpg"/>
+      </GROUP>
       <GROUP id="{9D74C4CB-B8FC-BE19-AC42-421AEBD9ED6B}" name="dog">
         <FILE id="RiWO91" name="dog_0.png" compile="0" resource="1" file="Source/assets/dog/dog_0.png"/>
         <FILE id="gKQTyd" name="dog_1.png" compile="0" resource="1" file="Source/assets/dog/dog_1.png"/>
