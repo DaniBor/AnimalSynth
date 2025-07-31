@@ -194,6 +194,10 @@ void AnimalSynthAudioProcessorEditor::resized()
     // === Square Sliders ===
     squarePunchAmountSlider.setBounds(10, 30, fxSliderSize, fxSliderSize);
     squarePunchDecaySlider.setBounds(10 + (15 + fxSliderSize) * 1, 30, fxSliderSize, fxSliderSize);
+
+    squareBitcrushRateSlider.setBounds(10 + (15 + fxSliderSize) * 2, 30, fxSliderSize, fxSliderSize);
+    squareBitcrushDepthSlider.setBounds(10 + (15 + fxSliderSize) * 3, 30, fxSliderSize, fxSliderSize);
+
     
 
     // === Triangle Sliders ===
@@ -342,6 +346,29 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
     squarePunchDecayAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "squarePunchDecay", squarePunchDecaySlider);
+
+    // Rate (Sample Rate Reduction)
+    squareBitcrushRateSlider.setSliderStyle(juce::Slider::Rotary);
+    squareBitcrushRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    squareBitcrushRateLabel.setText("Crush Rate", juce::dontSendNotification);
+    squareBitcrushRateLabel.attachToComponent(&squareBitcrushRateSlider, false);
+    squareFXPanel.addAndMakeVisible(squareBitcrushRateSlider);
+    squareFXPanel.addAndMakeVisible(squareBitcrushRateLabel);
+
+    squareBitcrushRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "squareBitcrushRate", squareBitcrushRateSlider);
+
+    // Depth (Bit Depth Reduction)
+    squareBitcrushDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    squareBitcrushDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    squareBitcrushDepthLabel.setText("Crush Depth", juce::dontSendNotification);
+    squareBitcrushDepthLabel.attachToComponent(&squareBitcrushDepthSlider, false);
+    squareFXPanel.addAndMakeVisible(squareBitcrushDepthSlider);
+    squareFXPanel.addAndMakeVisible(squareBitcrushDepthLabel);
+
+    squareBitcrushDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "squareBitcrushDepth", squareBitcrushDepthSlider);
+
 
     // === Triangle Panel ===
     // Glide Time

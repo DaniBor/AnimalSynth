@@ -124,6 +124,9 @@ private:
     float squarePunchLevel = 0.0f;
     float squarePunchDecayRate = 0.0f;
 
+    float lastBitcrushedSample = 0.0f;
+    int bitcrushCounter = 0;
+
     // === Triangle Filter and FX ===
     double glideStartFreq = 0.0f;
     double glideTargetFreq = 0.0f;

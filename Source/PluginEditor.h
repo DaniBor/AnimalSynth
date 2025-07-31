@@ -89,6 +89,13 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchAmountAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchDecayAttachment;
 
+    juce::Slider squareBitcrushRateSlider;
+    juce::Label squareBitcrushRateLabel;
+    juce::Slider squareBitcrushDepthSlider;
+    juce::Label squareBitcrushDepthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squareBitcrushRateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squareBitcrushDepthAttachment;
+
 
     // === Triangle Panel Elements ===
     juce::Slider triGlideTimeSlider;

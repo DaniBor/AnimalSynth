@@ -69,6 +69,16 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "squarePunchDecay", "Punch Decay",
             juce::NormalisableRange<float>(0.01f, 0.3f, 0.01f), 0.05f
         ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "squareBitcrushRate", "Bitcrush Rate",
+            juce::NormalisableRange<float>(100.0f, 8000.0f, 1.0f), 10000.0f // Hz
+        ),
+
+        std::make_unique<juce::AudioParameterFloat>(
+            "squareBitcrushDepth", "Bitcrush Depth",
+            juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 16.0f // Bits
+        ),
+
             // === Triangle Params ===
         std::make_unique<juce::AudioParameterFloat>("triGlideTime", "Glide Time", 0.0f, 0.2f, 0.05f),
         std::make_unique<juce::AudioParameterFloat>(
@@ -538,6 +548,9 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
     auto numChannels = buffer.getNumChannels();
     auto sampleRate = getSampleRate();
 
+    float crushRate = *parameters.getRawParameterValue("squareBitcrushRate");
+    float crushDepth = *parameters.getRawParameterValue("squareBitcrushDepth");
+
     // === Handle MIDI ===
     for (const auto metadata : midi)
     {
@@ -549,7 +562,8 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
 
             phaseIncrement = freq / sampleRate;
-            phase = 0.0;
+            //phase = 0.0;
+            bitcrushCounter = 0;
             adsr.noteOn();
 
             // --- Punch envelope init ---
@@ -566,14 +580,10 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
     {
         for (int sample = 0; sample < numSamples; ++sample)
         {
-            
-
-
-
             float env = adsr.getNextSample();
-            float rawSample = phase < 0.5 ? 1.0f : -1.0f;
-            
+            float rawSample = (phase < 0.5f) ? 1.0f : -1.0f;
 
+            // --- Punch Envelope ---
             if (squarePunchLevel > 0.0f)
             {
                 squarePunchLevel -= squarePunchDecayRate;
@@ -584,10 +594,34 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
 
             float currentSample = rawSample * env * punchEnv;
 
+            // --- Bitcrusher ---
+            bool bitcrusherActive = crushDepth > 1.0f;
+            if (bitcrusherActive)
+            {
+                int bitDepth = static_cast<int>(std::round(crushDepth));
+                bitDepth = std::clamp(bitDepth, 1, 16); // Prevent extreme values
+
+                int quantizationLevels = (1 << bitDepth) - 1;
+
+                int samplesPerHold = std::max(1, static_cast<int>(sampleRate / crushRate));
+
+                if (bitcrushCounter == 0)
+                {
+                    // Quantize current sample
+                    lastBitcrushedSample = std::round(currentSample * quantizationLevels) / quantizationLevels;
+                }
+
+                currentSample = lastBitcrushedSample;
+
+                bitcrushCounter = (bitcrushCounter + 1) % samplesPerHold;
+            }
+
+            // --- Phase update ---
             phase += phaseIncrement;
             if (phase >= 1.0)
                 phase -= 1.0;
 
+            // --- Output to buffer ---
             for (int channel = 0; channel < numChannels; ++channel)
                 buffer.setSample(channel, sample, currentSample);
         }
