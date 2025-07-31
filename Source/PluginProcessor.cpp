@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "AnimationDisplayComponent.h"
 
 //==============================================================================
 AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
@@ -328,6 +329,11 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
         {
             float env = adsr.getNextSample(); // ADSR envelope
             float currentSample = 0.0f;
+
+            AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+            if (e != nullptr) {
+                e->animationPlaceholder.setEnvelopeLevel(env);
+            }
 
             // Vibrato (LFO on frequency)
             float vibrato = std::sin(2.0 * juce::MathConstants<double>::pi * vibratoPhase) * vibratoDepth;

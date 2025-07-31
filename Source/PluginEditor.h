@@ -79,7 +79,7 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawSweepDepthAttachment;
 
 
-
+    AnimationDisplayComponent animationPlaceholder;
 
     // === Square Panel Elements ===
     juce::Slider squareSlider;
@@ -100,7 +100,6 @@ private:
 
     CustomLookAndFeel customLookAndFeel;
 
-    AnimationDisplayComponent animationPlaceholder;
     AnimationDisplayComponent polyMalButton;
     AnimationDisplayComponent waveVisualizer;
 

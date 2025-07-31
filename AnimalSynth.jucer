@@ -4,8 +4,47 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20"
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="vrJX4Q" name="AnimalSynth">
-    <GROUP id="{DA9539E0-2324-EE4F-C55B-D8A5C7C72B82}" name="assets"/>
     <GROUP id="{F325D188-6945-BBF1-34AE-9819FFC94D97}" name="Source">
+      <GROUP id="{27ACE162-4DCF-3B62-E4CE-9F2461FB149C}" name="wolf">
+        <FILE id="h8ECqx" name="wolf_0.png" compile="0" resource="1" file="Source/assets/wolf/wolf_0.png"/>
+        <FILE id="iQJcKd" name="wolf_1.png" compile="0" resource="1" file="Source/assets/wolf/wolf_1.png"/>
+        <FILE id="EsIbpN" name="wolf_2.png" compile="0" resource="1" file="Source/assets/wolf/wolf_2.png"/>
+        <FILE id="hXLA2j" name="wolf_3.png" compile="0" resource="1" file="Source/assets/wolf/wolf_3.png"/>
+        <FILE id="nmBWT4" name="wolf_4.png" compile="0" resource="1" file="Source/assets/wolf/wolf_4.png"/>
+        <FILE id="yvIKEj" name="wolf_5.png" compile="0" resource="1" file="Source/assets/wolf/wolf_5.png"/>
+        <FILE id="zQaHsD" name="wolf_6.png" compile="0" resource="1" file="Source/assets/wolf/wolf_6.png"/>
+        <FILE id="cw3p8L" name="wolf_7.png" compile="0" resource="1" file="Source/assets/wolf/wolf_7.png"/>
+        <FILE id="ZVYJk0" name="wolf_8.png" compile="0" resource="1" file="Source/assets/wolf/wolf_8.png"/>
+        <FILE id="Vj6rOO" name="wolf_9.png" compile="0" resource="1" file="Source/assets/wolf/wolf_9.png"/>
+        <FILE id="CUSdzI" name="wolf_10.png" compile="0" resource="1" file="Source/assets/wolf/wolf_10.png"/>
+        <FILE id="xuBBgm" name="wolf_11.png" compile="0" resource="1" file="Source/assets/wolf/wolf_11.png"/>
+        <FILE id="Hkaevv" name="wolf_12.png" compile="0" resource="1" file="Source/assets/wolf/wolf_12.png"/>
+        <FILE id="ICgdjW" name="wolf_13.png" compile="0" resource="1" file="Source/assets/wolf/wolf_13.png"/>
+        <FILE id="nW2qMA" name="wolf_14.png" compile="0" resource="1" file="Source/assets/wolf/wolf_14.png"/>
+        <FILE id="QOvH3D" name="wolf_15.png" compile="0" resource="1" file="Source/assets/wolf/wolf_15.png"/>
+        <FILE id="hE0UEP" name="wolf_16.png" compile="0" resource="1" file="Source/assets/wolf/wolf_16.png"/>
+      </GROUP>
+      <GROUP id="{8254CCFC-BF7B-B45D-D63C-2709879A9E86}" name="bear">
+        <FILE id="y6TyKU" name="bear_0.png" compile="0" resource="1" file="Source/assets/bear/bear_0.png"/>
+        <FILE id="hHLMr9" name="bear_1.png" compile="0" resource="1" file="Source/assets/bear/bear_1.png"/>
+        <FILE id="p3Yfs1" name="bear_2.png" compile="0" resource="1" file="Source/assets/bear/bear_2.png"/>
+        <FILE id="m3qixy" name="bear_3.png" compile="0" resource="1" file="Source/assets/bear/bear_3.png"/>
+        <FILE id="KxMJtT" name="bear_4.png" compile="0" resource="1" file="Source/assets/bear/bear_4.png"/>
+        <FILE id="lbgtOg" name="bear_5.png" compile="0" resource="1" file="Source/assets/bear/bear_5.png"/>
+        <FILE id="OBiPjJ" name="bear_6.png" compile="0" resource="1" file="Source/assets/bear/bear_6.png"/>
+        <FILE id="c4vxXk" name="bear_7.png" compile="0" resource="1" file="Source/assets/bear/bear_7.png"/>
+        <FILE id="jxu25K" name="bear_8.png" compile="0" resource="1" file="Source/assets/bear/bear_8.png"/>
+        <FILE id="EIaUPr" name="bear_9.png" compile="0" resource="1" file="Source/assets/bear/bear_9.png"/>
+        <FILE id="YvoQQM" name="bear_10.png" compile="0" resource="1" file="Source/assets/bear/bear_10.png"/>
+        <FILE id="AK8hxL" name="bear_11.png" compile="0" resource="1" file="Source/assets/bear/bear_11.png"/>
+        <FILE id="RQXe7v" name="bear_12.png" compile="0" resource="1" file="Source/assets/bear/bear_12.png"/>
+        <FILE id="DvKs13" name="bear_13.png" compile="0" resource="1" file="Source/assets/bear/bear_13.png"/>
+        <FILE id="MZVgNE" name="bear_14.png" compile="0" resource="1" file="Source/assets/bear/bear_14.png"/>
+        <FILE id="Ti7irh" name="bear_15.png" compile="0" resource="1" file="Source/assets/bear/bear_15.png"/>
+        <FILE id="Av8aZv" name="bear_16.png" compile="0" resource="1" file="Source/assets/bear/bear_16.png"/>
+      </GROUP>
+      <FILE id="aU8ysO" name="AnimationDisplayComponent.cpp" compile="1"
+            resource="0" file="Source/AnimationDisplayComponent.cpp"/>
       <FILE id="WEqhXU" name="AnimationDisplayComponent.h" compile="0" resource="0"
             file="Source/AnimationDisplayComponent.h"/>
       <FILE id="hlEp4Q" name="CustomLookAndFeel.h" compile="0" resource="0"
