@@ -1,5 +1,8 @@
 #pragma once
-#include <JuceHeader.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_core/juce_core.h>
+
 
 class ScaledVisualiserComponent : public juce::Component, private juce::Timer
 {

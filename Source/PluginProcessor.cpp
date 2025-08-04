@@ -9,6 +9,10 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "AnimationDisplayComponent.h"
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+
+
 
 //==============================================================================
 AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
@@ -580,7 +584,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             midiNote = msg.getNoteNumber();
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
             phaseIncrement = freq / sampleRate;
-            phase = 0.0;
+            //phase = 0.0;
             adsr.noteOn();
 
             squarePunchLevel = 1.0f;

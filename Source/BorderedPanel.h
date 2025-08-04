@@ -1,16 +1,5 @@
-/*
-  ==============================================================================
-
-    BorderedPanel.h
-    Created: 28 Jul 2025 1:16:59pm
-    Author:  Boro
-
-  ==============================================================================
-*/
-
 #pragma once
-
-#include <JuceHeader.h>
+#include <juce_gui_basics/juce_gui_basics.h>
 
 
 class BorderedPanel : public juce::Component
