@@ -678,14 +678,20 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
 
 void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    auto numSamples = buffer.getNumSamples();
-    auto numChannels = buffer.getNumChannels();
-    auto sampleRate = getSampleRate();
+    const int numSamples   = buffer.getNumSamples();
+    const int numChannels  = buffer.getNumChannels();
+    const float sampleRate = getSampleRate();
 
-    float chirpRate = *parameters.getRawParameterValue("triChirpRate");
+    float chirpRate  = *parameters.getRawParameterValue("triChirpRate");
     float chirpDepth = *parameters.getRawParameterValue("triChirpDepth");
 
-    // === Handle MIDI ===
+    float echoTimeMs = *parameters.getRawParameterValue("triEchoTime");
+    float echoMix    = *parameters.getRawParameterValue("triEchoMix");
+
+    const int delaySamples     = static_cast<int>((echoTimeMs / 1000.0f) * sampleRate);
+    const int echoBufferLength = echoBuffer.getNumSamples();
+
+    // === MIDI handling ===
     for (const auto metadata : midi)
     {
         const auto msg = metadata.getMessage();
@@ -695,94 +701,83 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
             midiNote = msg.getNoteNumber();
 
             double targetFreq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
-            float glideDepth = *parameters.getRawParameterValue("triGlideDepth");
-            float glideTime = *parameters.getRawParameterValue("triGlideTime");
+            float glideDepth  = *parameters.getRawParameterValue("triGlideDepth");
+            float glideTime   = *parameters.getRawParameterValue("triGlideTime");
 
-            // Calculate start frequency a number of semitones below target
             double startFreq = targetFreq * std::pow(2.0, -glideDepth / 12.0);
 
-            glideStartFreq = startFreq;
-            glideTargetFreq = targetFreq;
-            glideCurrentFreq = startFreq;
+            glideStartFreq     = startFreq;
+            glideTargetFreq    = targetFreq;
+            glideCurrentFreq   = startFreq;
+            glideSamplesLeft   = static_cast<int>(glideTime * sampleRate);
+            glideStep          = (glideSamplesLeft > 0) ? (glideTargetFreq - glideStartFreq) / glideSamplesLeft : 0.0;
 
-            // Total samples to interpolate over
-            glideSamplesLeft = static_cast<int>(glideTime * getSampleRate());
-
-            if (glideSamplesLeft > 0)
-                glideStep = (glideTargetFreq - glideStartFreq) / glideSamplesLeft;
-            else
-                glideStep = 0.0;
-
-            //phase = 0.0;
             adsr.noteOn();
+        }
+        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
+        {
+            adsr.noteOff();
         }
     }
 
     AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
 
-    // === Synthesis loop ===
-    if (adsr.isActive() && e != nullptr)
-    {
-        float echoTimeMs = *parameters.getRawParameterValue("triEchoTime");
-        float echoMix = *parameters.getRawParameterValue("triEchoMix");
-
-        int delaySamples = static_cast<int>((echoTimeMs / 1000.0f) * sampleRate);
-        int echoBufferLength = echoBuffer.getNumSamples();
-
-        for (int sample = 0; sample < numSamples; ++sample)
-        {
-            float env = adsr.getNextSample();
-            e->animationPlaceholder.setEnvelopeLevel(env);
-
-            // Glide update
-            if (glideSamplesLeft > 0)
-            {
-                glideCurrentFreq += glideStep;
-                --glideSamplesLeft;
-            }
-            else
-            {
-                glideCurrentFreq = glideTargetFreq;
-            }
-
-            phaseIncrement = glideCurrentFreq / sampleRate;
-
-            float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
-
-            // Chirp (AM)
-            float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * chirpPhase) * chirpDepth);
-            chirpPhase += chirpRate / sampleRate;
-            if (chirpPhase >= 1.0f)
-                chirpPhase -= 1.0f;
-
-            float drySample = rawSample * env * am;
-
-            // Echo
-            for (int channel = 0; channel < numChannels; ++channel)
-            {
-                auto* echoData = echoBuffer.getWritePointer(channel);
-                int readPos = (echoWritePosition + echoBufferLength - delaySamples) % echoBufferLength;
-
-                float delayedSample = echoData[readPos];
-                float wetSample = (1.0f - echoMix) * drySample + echoMix * delayedSample;
-
-                // Write dry + feedback into echo buffer
-                echoData[echoWritePosition] = drySample + delayedSample * 0.4f; // feedback = 0.4
-
-                // Output mixed sample
-                buffer.setSample(channel, sample, wetSample);
-            }
-
-            // Update phase and delay write head
-            phase += phaseIncrement;
-            if (phase >= 1.0f)
-                phase -= 1.0f;
-
-            echoWritePosition = (echoWritePosition + 1) % echoBufferLength;
-        }
-    }
-    else
+    if (!adsr.isActive())
     {
         buffer.clear();
+        echoBuffer.clear();
+        echoWritePosition = 0;
+        return;
+    }
+
+    for (int sample = 0; sample < numSamples; ++sample)
+    {
+        float env = adsr.getNextSample();
+        if (e != nullptr) e->animationPlaceholder.setEnvelopeLevel(env);
+
+        // === Glide Update ===
+        if (glideSamplesLeft > 0)
+        {
+            glideCurrentFreq += glideStep;
+            --glideSamplesLeft;
+        }
+        else
+        {
+            glideCurrentFreq = glideTargetFreq;
+        }
+
+        // === Triangle oscillator ===
+        phaseIncrement = glideCurrentFreq / sampleRate;
+        float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
+
+        // === Chirp (AM) ===
+        float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * chirpPhase) * chirpDepth);
+        chirpPhase += chirpRate / sampleRate;
+        if (chirpPhase >= 1.0f) chirpPhase -= 1.0f;
+
+        float drySample = rawSample * env * am;
+
+        // === Echo with fade-out based on ADSR ===
+        float echoFade = juce::jlimit(0.0f, 1.0f, env); // 0 when envelope is silent, 1 at peak
+
+        for (int channel = 0; channel < numChannels; ++channel)
+        {
+            float* echoData = echoBuffer.getWritePointer(channel);
+            int readPos     = (echoWritePosition + echoBufferLength - delaySamples) % echoBufferLength;
+
+            float delayedSample = echoData[readPos] * echoFade;
+            float wetSample     = (1.0f - echoMix) * drySample + echoMix * delayedSample;
+
+            float feedback = delayedSample * 0.4f * env;
+
+            echoData[echoWritePosition] = drySample + feedback;
+
+            buffer.setSample(channel, sample, wetSample);
+        }
+
+        phase += phaseIncrement;
+        if (phase >= 1.0) phase -= 1.0;
+
+        echoWritePosition = (echoWritePosition + 1) % echoBufferLength;
     }
 }

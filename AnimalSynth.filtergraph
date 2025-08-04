@@ -61,11 +61,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="11" x="0.5019206145966709" y="0.3804100227790433" useARA="0"
-          uiLastX_Normal="30" uiLastY_Normal="481" uiopen_Normal="1">
+  <FILTER uid="11" x="0.5032010243277849" y="0.4646924829157175" useARA="0"
+          uiLastX_Normal="494" uiLastY_Normal="94" uiopen_Normal="1">
     <PLUGIN name="AnimalSynth" format="VST3" category="Instrument|Synth"
-            manufacturer="Your Name" version="1.0.0" file="C:\Users\Boro\Documents\Projects\Audio\AnimalSynth\cmake-build-debug-visual-studio\AnimalSynth_artefacts\Debug\VST3\AnimalSynth.vst3\Contents\x86_64-win\AnimalSynth.vst3"
-            uniqueId="94129433" isInstrument="1" fileTime="19875a8e5c5" infoUpdateTime="19875aa5a56"
+            manufacturer="Your Name" version="1.0.0" file="C:\Program Files\Common Files\VST3\AnimalSynth.vst3\Contents\x86_64-win\AnimalSynth.vst3"
+            uniqueId="94129433" isInstrument="1" fileTime="19876ab42e5" infoUpdateTime="19876ac43e8"
             numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0"
             uid="c004177e"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
