@@ -60,10 +60,29 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
             s.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
         };
 
-    styleKnob(attackSlider); addAndMakeVisible(attackSlider);
-    styleKnob(decaySlider);  addAndMakeVisible(decaySlider);
-    styleKnob(sustainSlider); addAndMakeVisible(sustainSlider);
-    styleKnob(releaseSlider); addAndMakeVisible(releaseSlider);
+    styleKnob(attackSlider);
+    attackLabel.attachToComponent(&attackSlider, false);
+    attackLabel.setText("Attack", juce::dontSendNotification);
+    attackLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(attackSlider);
+
+    styleKnob(decaySlider);
+    decayLabel.attachToComponent(&decaySlider, false);
+    decayLabel.setText("Decay", juce::dontSendNotification);
+    decayLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(decaySlider);
+
+    styleKnob(sustainSlider);
+    sustainLabel.attachToComponent(&sustainSlider, false);
+    sustainLabel.setText("Sustain", juce::dontSendNotification);
+    sustainLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(sustainSlider);
+
+    styleKnob(releaseSlider);
+    releaseLabel.attachToComponent(&releaseSlider, false);
+    releaseLabel.setText("Release", juce::dontSendNotification);
+    releaseLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(releaseSlider);
 
     attackAttachment = std::make_unique<SliderAttachment>(par, "attack", attackSlider);
     decayAttachment = std::make_unique<SliderAttachment>(par, "decay", decaySlider);
@@ -170,8 +189,10 @@ void AnimalSynthAudioProcessorEditor::resized()
     for (auto* slider : { &attackSlider, &decaySlider, &sustainSlider, &releaseSlider })
     {
         auto zone = adsrArea.removeFromLeft(sliderZoneWidth);
-        slider->setBounds(zone.withSizeKeepingCentre(50, 60)); // smaller knob
+        slider->setBounds(zone.getCentreX()-30, zone.getCentreY()-25, 60, 60);
     }
+
+    //zone.withSizeKeepingCentre(50, 50)
 
     // Reuse animation component as second placeholder
     logoPanel.setBounds(adsrPlaceholderArea);
@@ -179,68 +200,69 @@ void AnimalSynthAudioProcessorEditor::resized()
     // FX sliders
     const int fxSliderSize = 60;
     int sliderPadding = 20;
+    int xPos = 10;
     int yPos = 35;
     int titleLabelOffset = 40;
     int titleLabelYPos = -20;
 
     // === Sine Sliders ===
-    vibratoDepthSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
-    vibratoRateSlider.setBounds(10 + sliderPadding + fxSliderSize, yPos, fxSliderSize, fxSliderSize);
+    vibratoDepthSlider.setBounds(xPos, yPos, fxSliderSize, fxSliderSize);
+    vibratoRateSlider.setBounds(xPos + sliderPadding + fxSliderSize, yPos, fxSliderSize, fxSliderSize);
 
 
-    chorusDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
-    chorusRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+    chorusDepthSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    chorusRateSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
 
-    tremoloDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
-    tremoloRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+    tremoloDepthSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    tremoloRateSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
-    vibratoLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
-    chorusLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
-    tremoloLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
+    vibratoLabel.setBounds(xPos + titleLabelOffset, titleLabelYPos, 60, 60);
+    chorusLabel.setBounds(xPos + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    tremoloLabel.setBounds(xPos + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
     // === Saw Sliders ===
-    sawCombTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
-    sawCombFeedbackSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
+    sawCombTimeSlider.setBounds(xPos, yPos, fxSliderSize, fxSliderSize);
+    sawCombFeedbackSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
-    formantFreqSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
-    formantResSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+    formantFreqSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    formantResSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
-    sawDriveSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
-    sawShapeSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+    sawDriveSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    sawShapeSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
-    sawCombLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
-    formantLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
-    waveshapeLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
+    sawCombLabel.setBounds(xPos + titleLabelOffset, titleLabelYPos, 60, 60);
+    formantLabel.setBounds(xPos + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    waveshapeLabel.setBounds(xPos + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
     // === Square Sliders ===
-    squarePunchAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
-    squarePunchDecaySlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
+    squarePunchAmountSlider.setBounds(xPos, yPos, fxSliderSize, fxSliderSize);
+    squarePunchDecaySlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
-    squareBitcrushRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
-    squareBitcrushDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+    squareBitcrushRateSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    squareBitcrushDepthSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
-    barkFilterFreqSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
-    barkFilterResSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+    barkFilterFreqSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    barkFilterResSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
-    punchLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
-    bitcrushLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
-    barkFilterLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 80, 60); // slightly wider for long name
+    punchLabel.setBounds(xPos + titleLabelOffset, titleLabelYPos, 60, 60);
+    bitcrushLabel.setBounds(xPos + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    barkFilterLabel.setBounds(xPos + titleLabelOffset * 9, titleLabelYPos, 80, 60); // slightly wider for long name
 
 
     // === Triangle Sliders ===
-    triGlideTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
-    triGlideDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
+    triGlideTimeSlider.setBounds(xPos, yPos, fxSliderSize, fxSliderSize);
+    triGlideDepthSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
-    triChirpRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
-    triChirpDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+    triChirpRateSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    triChirpDepthSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
 
-    triEchoMixSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
-    triEchoTimeSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+    triEchoMixSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    triEchoTimeSlider.setBounds(xPos + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
-    glideLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
-    chirpLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
-    echoLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
+    glideLabel.setBounds(xPos + titleLabelOffset, titleLabelYPos, 60, 60);
+    chirpLabel.setBounds(xPos + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    echoLabel.setBounds(xPos + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
 }
 

@@ -520,11 +520,15 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    if (adsr.isActive())
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+
+    if (adsr.isActive() && e != nullptr)
     {
         for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
+
+            e->wildlifeCam.setEnvelopeLevel(env);
 
             float rawSaw = 2.0f * static_cast<float>(phase) - 1.0f;
             float shaped = rawSaw * env;
