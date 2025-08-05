@@ -36,7 +36,7 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
         std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 1.0f, 0.1f),
         std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 1.0f, 0.2f),
         std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
-        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f),
+        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 3.0f, 0.5f),
 
             // === Sine Params ===
         std::make_unique<juce::AudioParameterFloat>("vibratoRate", "Vibrato Rate", 0.0f, 10.0f, 5.0f),

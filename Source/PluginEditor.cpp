@@ -186,14 +186,17 @@ void AnimalSynthAudioProcessorEditor::resized()
     // === Sine Sliders ===
     vibratoDepthSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
     vibratoRateSlider.setBounds(10 + sliderPadding + fxSliderSize, yPos, fxSliderSize, fxSliderSize);
-    vibratoLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
+
 
     chorusDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
     chorusRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
-    chorusLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+
 
     tremoloDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
     tremoloRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+
+    vibratoLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
+    chorusLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
     tremoloLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
     // === Saw Sliders ===
@@ -206,6 +209,9 @@ void AnimalSynthAudioProcessorEditor::resized()
     sawDriveSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
     sawShapeSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
+    sawCombLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
+    formantLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    waveshapeLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
     // === Square Sliders ===
     squarePunchAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
@@ -217,7 +223,10 @@ void AnimalSynthAudioProcessorEditor::resized()
     barkFilterFreqSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
     barkFilterResSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
 
-    
+    punchLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
+    bitcrushLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    barkFilterLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 80, 60); // slightly wider for long name
+
 
     // === Triangle Sliders ===
     triGlideTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
@@ -228,6 +237,10 @@ void AnimalSynthAudioProcessorEditor::resized()
 
     triEchoMixSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
     triEchoTimeSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+
+    glideLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
+    chirpLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
+    echoLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
 }
 
@@ -345,10 +358,15 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
         audioProcessor.parameters, "tremoloRate", tremoloRateSlider);
 
     // ===== Saw Panel =====
+    // === Comb ===
+    sawCombLabel.setText("Comb", juce::dontSendNotification);
+    sawCombLabel.setJustificationType(juce::Justification::centred);
+    sawFXPanel.addAndMakeVisible(sawCombLabel);
     // Comb Time
     sawCombTimeSlider.setSliderStyle(juce::Slider::Rotary);
     sawCombTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawCombTimeLabel.setText("Comb Time", juce::dontSendNotification);
+    sawCombTimeLabel.setText("Time", juce::dontSendNotification);
+    sawCombTimeLabel.setJustificationType(juce::Justification::centred);
     sawCombTimeLabel.attachToComponent(&sawCombTimeSlider, false);
     sawFXPanel.addAndMakeVisible(sawCombTimeSlider);
     sawFXPanel.addAndMakeVisible(sawCombTimeLabel);
@@ -359,7 +377,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Comb Feedback
     sawCombFeedbackSlider.setSliderStyle(juce::Slider::Rotary);
     sawCombFeedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawCombFeedbackLabel.setText("Comb Feedback", juce::dontSendNotification);
+    sawCombFeedbackLabel.setText("Feedback", juce::dontSendNotification);
+    sawCombFeedbackLabel.setJustificationType(juce::Justification::centred);
     sawCombFeedbackLabel.attachToComponent(&sawCombFeedbackSlider, false);
     sawFXPanel.addAndMakeVisible(sawCombFeedbackSlider);
     sawFXPanel.addAndMakeVisible(sawCombFeedbackLabel);
@@ -367,9 +386,15 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawCombFeedbackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "sawCombFeedback", sawCombFeedbackSlider);
 
+    // === Formant ===
+    formantLabel.setText("Formant", juce::dontSendNotification);
+    formantLabel.setJustificationType(juce::Justification::centred);
+    sawFXPanel.addAndMakeVisible(formantLabel);
+
     formantFreqSlider.setSliderStyle(juce::Slider::Rotary);
     formantFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    formantFreqLabel.setText("Formant Freq", juce::dontSendNotification);
+    formantFreqLabel.setText("Frequency", juce::dontSendNotification);
+    formantFreqLabel.setJustificationType(juce::Justification::centred);
     formantFreqLabel.attachToComponent(&formantFreqSlider, false);
     sawFXPanel.addAndMakeVisible(formantFreqSlider);
     sawFXPanel.addAndMakeVisible(formantResSlider);
@@ -377,7 +402,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
     formantResSlider.setSliderStyle(juce::Slider::Rotary);
     formantResSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    formantResLabel.setText("Formant Res", juce::dontSendNotification);
+    formantResLabel.setText("Resonance", juce::dontSendNotification);
+    formantResLabel.setJustificationType(juce::Justification::centred);
     formantResLabel.attachToComponent(&formantResSlider, false);
     sawFXPanel.addAndMakeVisible(formantFreqLabel);
     sawFXPanel.addAndMakeVisible(formantResLabel);
@@ -388,10 +414,16 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     formantResAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "formantResonance", formantResSlider);
 
-    // === Saw Drive ===
+    // === Waveshape ===
+    waveshapeLabel.setText("Waveshape", juce::dontSendNotification);
+    waveshapeLabel.setJustificationType(juce::Justification::centred);
+    sawFXPanel.addAndMakeVisible(waveshapeLabel);
+
+    // Saw Drive
     sawDriveSlider.setSliderStyle(juce::Slider::Rotary);
     sawDriveSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     sawDriveLabel.setText("Drive", juce::dontSendNotification);
+    sawDriveLabel.setJustificationType(juce::Justification::centred);
     sawDriveLabel.attachToComponent(&sawDriveSlider, false);
     sawFXPanel.addAndMakeVisible(sawDriveSlider);
     sawFXPanel.addAndMakeVisible(sawDriveLabel);
@@ -399,10 +431,11 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawDriveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
             audioProcessor.parameters, "sawDrive", sawDriveSlider);
 
-    // === Saw Shape ===
+    // Saw Shape
     sawShapeSlider.setSliderStyle(juce::Slider::Rotary);
     sawShapeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     sawShapeLabel.setText("Shape", juce::dontSendNotification);
+    sawShapeLabel.setJustificationType(juce::Justification::centred);
     sawShapeLabel.attachToComponent(&sawShapeSlider, false);
     sawFXPanel.addAndMakeVisible(sawShapeSlider);
     sawFXPanel.addAndMakeVisible(sawShapeLabel);
@@ -412,10 +445,17 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
 
     // ===== Square Panel =====
+
+    // === Punch ===
+    punchLabel.setText("Punch", juce::dontSendNotification);
+    punchLabel.setJustificationType(juce::Justification::centred);
+    squareFXPanel.addAndMakeVisible(punchLabel);
+
     // Punch Amount Slider
     squarePunchAmountSlider.setSliderStyle(juce::Slider::Rotary);
     squarePunchAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    squarePunchAmountLabel.setText("Punch Amt", juce::dontSendNotification);
+    squarePunchAmountLabel.setText("Amount", juce::dontSendNotification);
+    squarePunchAmountLabel.setJustificationType(juce::Justification::centred);
     squarePunchAmountLabel.attachToComponent(&squarePunchAmountSlider, false);
     squareFXPanel.addAndMakeVisible(squarePunchAmountSlider);
     squareFXPanel.addAndMakeVisible(squarePunchAmountLabel);
@@ -426,7 +466,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Punch Decay Slider
     squarePunchDecaySlider.setSliderStyle(juce::Slider::Rotary);
     squarePunchDecaySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    squarePunchDecayLabel.setText("Punch Decay", juce::dontSendNotification);
+    squarePunchDecayLabel.setText("Decay", juce::dontSendNotification);
+    squarePunchDecayLabel.setJustificationType(juce::Justification::centred);
     squarePunchDecayLabel.attachToComponent(&squarePunchDecaySlider, false);
     squareFXPanel.addAndMakeVisible(squarePunchDecaySlider);
     squareFXPanel.addAndMakeVisible(squarePunchDecayLabel);
@@ -434,10 +475,16 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     squarePunchDecayAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "squarePunchDecay", squarePunchDecaySlider);
 
+    // === Bitcrush ===
+    bitcrushLabel.setText("Bitcrush", juce::dontSendNotification);
+    bitcrushLabel.setJustificationType(juce::Justification::centred);
+    squareFXPanel.addAndMakeVisible(bitcrushLabel);
+
     // Rate (Sample Rate Reduction)
     squareBitcrushRateSlider.setSliderStyle(juce::Slider::Rotary);
     squareBitcrushRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    squareBitcrushRateLabel.setText("Crush Rate", juce::dontSendNotification);
+    squareBitcrushRateLabel.setText("Rate", juce::dontSendNotification);
+    squareBitcrushRateLabel.setJustificationType(juce::Justification::centred);
     squareBitcrushRateLabel.attachToComponent(&squareBitcrushRateSlider, false);
     squareFXPanel.addAndMakeVisible(squareBitcrushRateSlider);
     squareFXPanel.addAndMakeVisible(squareBitcrushRateLabel);
@@ -448,7 +495,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Depth (Bit Depth Reduction)
     squareBitcrushDepthSlider.setSliderStyle(juce::Slider::Rotary);
     squareBitcrushDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    squareBitcrushDepthLabel.setText("Crush Depth", juce::dontSendNotification);
+    squareBitcrushDepthLabel.setText("Depth", juce::dontSendNotification);
+    squareBitcrushDepthLabel.setJustificationType(juce::Justification::centred);
     squareBitcrushDepthLabel.attachToComponent(&squareBitcrushDepthSlider, false);
     squareFXPanel.addAndMakeVisible(squareBitcrushDepthSlider);
     squareFXPanel.addAndMakeVisible(squareBitcrushDepthLabel);
@@ -456,9 +504,15 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     squareBitcrushDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "squareBitcrushDepth", squareBitcrushDepthSlider);
 
+    // === Bark Filter ===
+    barkFilterLabel.setText("Bark Filter", juce::dontSendNotification);
+    barkFilterLabel.setJustificationType(juce::Justification::centred);
+    squareFXPanel.addAndMakeVisible(barkFilterLabel);
+
     barkFilterFreqSlider.setSliderStyle(juce::Slider::Rotary);
     barkFilterFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    barkFilterFreqLabel.setText("Bark Freq", juce::dontSendNotification);
+    barkFilterFreqLabel.setText("Frequency", juce::dontSendNotification);
+    barkFilterFreqLabel.setJustificationType(juce::Justification::centred);
     barkFilterFreqLabel.attachToComponent(&barkFilterFreqSlider, false);
     squareFXPanel.addAndMakeVisible(barkFilterFreqSlider);
     squareFXPanel.addAndMakeVisible(barkFilterFreqLabel);
@@ -468,7 +522,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
     barkFilterResSlider.setSliderStyle(juce::Slider::Rotary);
     barkFilterResSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    barkFilterResLabel.setText("Bark Res", juce::dontSendNotification);
+    barkFilterResLabel.setText("Resonance", juce::dontSendNotification);
+    barkFilterResLabel.setJustificationType(juce::Justification::centred);
     barkFilterResLabel.attachToComponent(&barkFilterResSlider, false);
     squareFXPanel.addAndMakeVisible(barkFilterResSlider);
     squareFXPanel.addAndMakeVisible(barkFilterResLabel);
@@ -478,10 +533,17 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 
 
     // ===== Triangle Panel =====
+
+    // === Glide ===
+    glideLabel.setText("Glide", juce::dontSendNotification);
+    glideLabel.setJustificationType(juce::Justification::centred);
+    triangleFXPanel.addAndMakeVisible(glideLabel);
+
     // Glide Time
     triGlideTimeSlider.setSliderStyle(juce::Slider::Rotary);
     triGlideTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triGlideTimeLabel.setText("Glide Time", juce::dontSendNotification);
+    triGlideTimeLabel.setText("Time", juce::dontSendNotification);
+    triGlideTimeLabel.setJustificationType(juce::Justification::centred);
     triGlideTimeLabel.attachToComponent(&triGlideTimeSlider, false);
     triangleFXPanel.addAndMakeVisible(triGlideTimeSlider);
     triangleFXPanel.addAndMakeVisible(triGlideTimeLabel);
@@ -492,7 +554,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Glide Depth
     triGlideDepthSlider.setSliderStyle(juce::Slider::Rotary);
     triGlideDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triGlideDepthLabel.setText("Glide Depth", juce::dontSendNotification);
+    triGlideDepthLabel.setText("Depth", juce::dontSendNotification);
+    triGlideDepthLabel.setJustificationType(juce::Justification::centred);
     triGlideDepthLabel.attachToComponent(&triGlideDepthSlider, false);
     triangleFXPanel.addAndMakeVisible(triGlideDepthSlider);
     triangleFXPanel.addAndMakeVisible(triGlideDepthLabel);
@@ -501,10 +564,16 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     triGlideDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "triGlideDepth", triGlideDepthSlider);
 
+    // === Chirp ===
+    chirpLabel.setText("Chirp", juce::dontSendNotification);
+    chirpLabel.setJustificationType(juce::Justification::centred);
+    triangleFXPanel.addAndMakeVisible(chirpLabel);
+
     // Chirp Rate
     triChirpRateSlider.setSliderStyle(juce::Slider::Rotary);
     triChirpRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triChirpRateLabel.setText("Chirp Rate", juce::dontSendNotification);
+    triChirpRateLabel.setText("Rate", juce::dontSendNotification);
+    triChirpRateLabel.setJustificationType(juce::Justification::centred);
     triChirpRateLabel.attachToComponent(&triChirpRateSlider, false);
     triangleFXPanel.addAndMakeVisible(triChirpRateSlider);
     triangleFXPanel.addAndMakeVisible(triChirpRateLabel);
@@ -515,7 +584,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Chirp Depth
     triChirpDepthSlider.setSliderStyle(juce::Slider::Rotary);
     triChirpDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triChirpDepthLabel.setText("Chirp Depth", juce::dontSendNotification);
+    triChirpDepthLabel.setText("Depth", juce::dontSendNotification);
+    triChirpDepthLabel.setJustificationType(juce::Justification::centred);
     triChirpDepthLabel.attachToComponent(&triChirpDepthSlider, false);
     triangleFXPanel.addAndMakeVisible(triChirpDepthSlider);
     triangleFXPanel.addAndMakeVisible(triChirpDepthLabel);
@@ -523,10 +593,16 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     triChirpDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "triChirpDepth", triChirpDepthSlider);
 
+    // === Echo ===
+    echoLabel.setText("Echo", juce::dontSendNotification);
+    echoLabel.setJustificationType(juce::Justification::centred);
+    triangleFXPanel.addAndMakeVisible(echoLabel);
+
     // Echo Time
     triEchoTimeSlider.setSliderStyle(juce::Slider::Rotary);
     triEchoTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triEchoTimeLabel.setText("Echo Time", juce::dontSendNotification);
+    triEchoTimeLabel.setText("Time", juce::dontSendNotification);
+    triEchoTimeLabel.setJustificationType(juce::Justification::centred);
     triEchoTimeLabel.attachToComponent(&triEchoTimeSlider, false);
     triangleFXPanel.addAndMakeVisible(triEchoTimeSlider);
     triangleFXPanel.addAndMakeVisible(triEchoTimeLabel);
@@ -537,13 +613,15 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Echo Mix
     triEchoMixSlider.setSliderStyle(juce::Slider::Rotary);
     triEchoMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    triEchoMixLabel.setText("Echo Mix", juce::dontSendNotification);
+    triEchoMixLabel.setText("Mix", juce::dontSendNotification);
+    triEchoMixLabel.setJustificationType(juce::Justification::centred);
     triEchoMixLabel.attachToComponent(&triEchoMixSlider, false);
     triangleFXPanel.addAndMakeVisible(triEchoMixSlider);
     triangleFXPanel.addAndMakeVisible(triEchoMixLabel);
 
     triEchoMixAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "triEchoMix", triEchoMixSlider);
+
 
     updateEffectUI();
 }

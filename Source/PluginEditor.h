@@ -78,15 +78,15 @@ private:
 
     // ===== Saw Panel Elements =====
     juce::Slider sawCombTimeSlider, sawCombFeedbackSlider;
-    juce::Label  sawCombTimeLabel, sawCombFeedbackLabel;
+    juce::Label  sawCombLabel, sawCombTimeLabel, sawCombFeedbackLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombTimeAttachment, sawCombFeedbackAttachment;
 
     juce::Slider formantFreqSlider, formantResSlider;
-    juce::Label formantFreqLabel, formantResLabel;
+    juce::Label formantLabel, formantFreqLabel, formantResLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> formantFreqAttachment, formantResAttachment;
 
     juce::Slider sawDriveSlider, sawShapeSlider;
-    juce::Label sawDriveLabel, sawShapeLabel;
+    juce::Label waveshapeLabel, sawDriveLabel, sawShapeLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDriveAttachment, sawShapeAttachment;
 
 
@@ -95,29 +95,29 @@ private:
 
     // ===== Square Panel Elements =====
     juce::Slider squarePunchAmountSlider, squarePunchDecaySlider;
-    juce::Label squarePunchAmountLabel, squarePunchDecayLabel;
+    juce::Label punchLabel, squarePunchAmountLabel, squarePunchDecayLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchAmountAttachment, squarePunchDecayAttachment;
 
     juce::Slider squareBitcrushRateSlider, squareBitcrushDepthSlider;
-    juce::Label squareBitcrushRateLabel, squareBitcrushDepthLabel;
+    juce::Label bitcrushLabel, squareBitcrushRateLabel, squareBitcrushDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squareBitcrushRateAttachment, squareBitcrushDepthAttachment;
 
     juce::Slider barkFilterFreqSlider, barkFilterResSlider;
-    juce::Label barkFilterFreqLabel, barkFilterResLabel;
+    juce::Label barkFilterLabel, barkFilterFreqLabel, barkFilterResLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> barkFilterFreqAttachment, barkFilterResAttachment;
 
 
     // ===== Triangle Panel Elements =====
     juce::Slider triGlideTimeSlider, triGlideDepthSlider;
-    juce::Label triGlideTimeLabel, triGlideDepthLabel;
+    juce::Label glideLabel, triGlideTimeLabel, triGlideDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triGlideTimeAttachment, triGlideDepthAttachment;
 
     juce::Slider triChirpRateSlider, triChirpDepthSlider;
-    juce::Label triChirpRateLabel, triChirpDepthLabel;
+    juce::Label chirpLabel, triChirpRateLabel, triChirpDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triChirpRateAttachment, triChirpDepthAttachment;
 
     juce::Slider triEchoTimeSlider, triEchoMixSlider;
-    juce::Label triEchoTimeLabel, triEchoMixLabel;
+    juce::Label echoLabel, triEchoTimeLabel, triEchoMixLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triEchoTimeAttachment, triEchoMixAttachment;
 #pragma endregion
 
