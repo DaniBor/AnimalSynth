@@ -583,11 +583,6 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
     }
 }
 
-
-
-
-
-
 void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     auto numSamples = buffer.getNumSamples();
@@ -615,6 +610,11 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             // Start the bark envelope only on note-on
             barkFilterEnvelope = 1.0f;
             barkFilterDecayRate = 1.0f / (sampleRate * 0.15f);
+        }
+        else if (msg.isNoteOff())
+        {
+            if (msg.getNoteNumber() == midiNote)
+                adsr.noteOff();
         }
     }
 
