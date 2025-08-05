@@ -1,6 +1,10 @@
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 
+
+/**
+ * @brief A basic Component with a background image and border
+ */
 class FXPanel : public juce::Component
 {
 public:

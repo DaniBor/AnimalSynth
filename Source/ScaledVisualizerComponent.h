@@ -4,6 +4,9 @@
 #include <juce_core/juce_core.h>
 
 
+/**
+ * @brief A simple Oscilloscope that draws smaller waves than JUCE's builtin one
+ */
 class ScaledVisualiserComponent : public juce::Component, private juce::Timer
 {
 public:
@@ -14,6 +17,12 @@ public:
         startTimerHz(60); // ~60fps
     }
 
+
+    /**
+     * @brief Copies samples from the given buffer into its own to display the Waveforms
+     *
+     * @param incoming The incoming Samples
+     */
     void pushBuffer(const juce::AudioBuffer<float>& incoming)
     {
         const int numSamples = incoming.getNumSamples();
@@ -32,12 +41,24 @@ public:
         }
     }
 
-    void setHorizontalZoom(float zoom) // 1.0 = default, <1 = zoom out, >1 = zoom in
+    /**
+     *
+     * @param zoom The zoom. > 1 to zoom out, < 1 to zoom in
+     */
+    void setHorizontalZoom(float zoom) // 1.0 = default
     {
         horizontalZoomFactor = zoom;
         repaint();
     }
 
+    /**
+     * @brief Takes the Samples in it's buffer and displays them.
+     *
+     * I didn't like how the builtin simple oscilloscope would cut off the highest and lowest parts.
+     * So I made this zoomable one. It iterates over every sample and draws a path between them.
+     *
+     * @param g The graphic to be displayed.
+     */
     void paint(juce::Graphics& g) override
     {
         g.fillAll(juce::Colours::black);

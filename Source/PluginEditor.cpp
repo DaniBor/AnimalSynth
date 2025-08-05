@@ -267,7 +267,7 @@ void AnimalSynthAudioProcessorEditor::resized()
 }
 
 /**
- * @brief Wechselt zwischen den Panels wenn ein neues ausgewählt wird
+ * @brief Switches between panels when a new one is chosen
  */
 void AnimalSynthAudioProcessorEditor::updateEffectUI()
 {
@@ -288,7 +288,7 @@ void AnimalSynthAudioProcessorEditor::updateEffectUI()
 }
 
 /**
- * @brief Bereitet alle Slider und Labels der FX Panele vor
+ * @brief Prepares all Sliders and Labels of the FXPanels
  */
 void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 {

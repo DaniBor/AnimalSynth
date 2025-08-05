@@ -43,19 +43,21 @@ private:
     // access the processor object that created it.
     AnimalSynthAudioProcessor& audioProcessor;
 
-    juce::Image backgroundImage;
+    CustomLookAndFeel customLookAndFeel;
 
+    /// ===== Panels and Assets =====
+    juce::Image backgroundImage;
     juce::Image sineImage, sawImage, squareImage, triangleImage;
     FXPanel sineFXPanel, sawFXPanel, squareFXPanel, triangleFXPanel;
 
     juce::ComboBox waveformSelector;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
 
-    CustomLookAndFeel customLookAndFeel;
+
 
     AnimationDisplayComponent logoPanel;
     AnimationDisplayComponent waveVisualizer;
-
+    /// ===== ADSR Elements =====
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
     juce::Label attackLabel, decayLabel, sustainLabel, releaseLabel;
 
@@ -63,7 +65,7 @@ private:
     std::unique_ptr<SliderAttachment> attackAttachment, decayAttachment, sustainAttachment, releaseAttachment;
 
 #pragma region PanelElements
-    // ===== Sine Panel Elements =====
+    /// ===== Sine Panel Elements =====
     juce::Slider vibratoRateSlider, vibratoDepthSlider;
     juce::Label vibratoLabel, vibratoRateLabel, vibratoDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoRateAttachment, vibratoDepthAttachment;
@@ -77,7 +79,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tremoloRateAttachment, tremoloDepthAttachment;
 
 
-    // ===== Saw Panel Elements =====
+    /// ===== Saw Panel Elements =====
     juce::Slider sawCombTimeSlider, sawCombFeedbackSlider;
     juce::Label  sawCombLabel, sawCombTimeLabel, sawCombFeedbackLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombTimeAttachment, sawCombFeedbackAttachment;
@@ -94,7 +96,7 @@ private:
 
 
 
-    // ===== Square Panel Elements =====
+    /// ===== Square Panel Elements =====
     juce::Slider squarePunchAmountSlider, squarePunchDecaySlider;
     juce::Label punchLabel, squarePunchAmountLabel, squarePunchDecayLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchAmountAttachment, squarePunchDecayAttachment;
@@ -108,7 +110,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> barkFilterFreqAttachment, barkFilterResAttachment;
 
 
-    // ===== Triangle Panel Elements =====
+    /// ===== Triangle Panel Elements =====
     juce::Slider triGlideTimeSlider, triGlideDepthSlider;
     juce::Label glideLabel, triGlideTimeLabel, triGlideDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triGlideTimeAttachment, triGlideDepthAttachment;

@@ -90,7 +90,7 @@ private:
     void processTriangleWave(juce::AudioBuffer<float>&, juce::MidiBuffer&);
 
 
-    // === Sine Filter and FX ===
+    /// === Sine Filter and FX ===
     juce::dsp::StateVariableTPTFilter<float> sineFilter;
     float sinefilterEnvelope = 0.0f;
     float sineFilterEnvIncrement = 0.0f;
@@ -103,7 +103,7 @@ private:
 
     float tremoloPhase = 0.0f;
 
-    // === Saw Filter and FX ===
+    /// === Saw Filter and FX ===
     // Comb filter
     juce::AudioBuffer<float> sawCombBuffer;
     int sawCombWritePosition = 0;
@@ -112,7 +112,7 @@ private:
     juce::dsp::StateVariableTPTFilter<float> formantFilter;
 
 
-    // === Square Filter and FX ===
+    /// === Square Filter and FX ===
     float squarePunchLevel = 0.0f;
     float squarePunchDecayRate = 0.0f;
 
@@ -123,7 +123,7 @@ private:
     float barkFilterEnvelope = 0.0f;
     float barkFilterDecayRate = 0.0f;
 
-    // === Triangle Filter and FX ===
+    /// === Triangle Filter and FX ===
     double glideStartFreq = 0.0f;
     double glideTargetFreq = 0.0f;
     double glideCurrentFreq = 0.0f;

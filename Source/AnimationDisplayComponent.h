@@ -3,6 +3,14 @@
 #include <juce_graphics/juce_graphics.h>
 #include <juce_core/juce_core.h>
 
+/**
+ * @brief A simple Component that draws Frames from loaded image based on the ADSR envelope
+ *
+ * When creating an instance of this Component you need a set of images stored inside a named folder inside the assets folder.
+ * You call loadFrames you give it the name of the folder as the parameter.
+ *
+ * @attention the images should be named like this: <foldername>_<framenumber>
+ */
 class AnimationDisplayComponent : public juce::Component, private juce::Timer
 {
 public:

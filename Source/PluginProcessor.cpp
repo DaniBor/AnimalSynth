@@ -314,7 +314,7 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     
 
     int currentWaveformIndex = *parameters.getRawParameterValue("waveform");
@@ -380,6 +380,11 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new AnimalSynthAudioProcessor();
 }
 
+/**
+ * @brief Creates the "Howl" sound using a Sine Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     auto numSamples = buffer.getNumSamples();
@@ -485,6 +490,11 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
     }
 }
 
+/**
+ * @brief Creates the "Growl" sound using a Saw Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     const int numSamples = buffer.getNumSamples();
@@ -583,6 +593,12 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
     }
 }
 
+
+/**
+ * @brief Creates the "Bark" sound using a Square Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     auto numSamples = buffer.getNumSamples();
@@ -618,7 +634,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
         }
     }
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
 
     // === Synthesis loop ===
     if (adsr.isActive() && e != nullptr)
@@ -699,6 +715,12 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
     }
 }
 
+
+/**
+ * @brief Creates the "Chirp" sound using a Triangle Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     const int numSamples   = buffer.getNumSamples();
