@@ -32,7 +32,6 @@ Der tierbasierte Synthesizer! Erstelle tierähnliche Laute mithilfe verschiedene
 - `AnimalSynthAudioProcessorEditor` – Editor mit Panelverwaltung
 - `ScaledVisualiserComponent` – Oszilloskopartige Anzeige
 - `AnimationDisplayComponent` – Bilddarstellung anhand der ADSR
-- `AnimalVoice` – Vorbereitete Klasse für zukünftige polyphone Nutzung
 
 ---
 
@@ -41,28 +40,31 @@ Der tierbasierte Synthesizer! Erstelle tierähnliche Laute mithilfe verschiedene
 Das Plugin unterstützt 4 Grundwellenformen:
 
 - **Sine (Wolf/Heulen)**:
-  - Vibrato
-  - Flutter (leichtes periodisches Verstimmen)
-  - Tremolo
-  - Dynamisches Filter
+  - Vibrato (Frequenzmodulation per LFO)
+  - Tremolo (Amplitude-Modulation per LFO)
+  - Chorus (mehrstimmiger Heuleffekt)
+  - Dynamisches Filter (Cutoff moduliert durch Hüllkurve)
 
 - **Saw (Bär/Grollen)**:
-  - Distortion mit Tone-Kontrolle
-  - Dynamischer Bandpass-Sweep
+  - Comb Filter (mit Delay und Feedback)
+  - Formant Filter (vokalartige Resonanzen)
+  - Waveshaper Distortion (Drive & Shape, deaktivierbar)
 
 - **Square (Hund/Bellen)**:
   - Punch-Hüllkurve (Attack-Boost)
-  - Bitcrusher
-  - Bark-Filter (resonanter Bandpass mit Hüllkurve)
+  - Bitcrusher (Sample- und Bitratenreduktion)
+  - Bark-Filter (Bandpass mit Hüllkurvenmodulation)
 
 - **Triangle (Vogel/Zwitschern)**:
-  - Pitch Glide
+  - Pitch Glide (Portamento)
   - Chirp (AM-Modulation)
-  - Echo (delay-basiert)
+  - Echo (delay-basiert mit Zeit und Mix)
 
 Zusätzlich:
-- ADSR-Hüllkurve wird für jede Stimme angewendet
-- Parameter über `AudioProcessorValueTreeState` angebunden
+- Eine ADSR-Hüllkurve wird für jede Stimme angewendet.
+- Die Parameter sind über `AudioProcessorValueTreeState` angebunden.
+- Alle Effekte sind über das GUI steuerbar und automatisierbar.
+
 
 ---
 
@@ -83,11 +85,13 @@ Zusätzlich:
 ```text
 MIDI Note On →
     → Bestimmung der Wellenform
-    → Initialisierung Frequenz, Phase, Filter
+    → Initialisierung von Frequenz, Phase, Effekthüllkurven
     → Sample-Loop:
-        → Wellenform-Generierung
-        → Effektberechnung (z. B. Glide, Vibrato, etc.)
-        → Filter/Modulation
-        → Anwendung der Hüllkurve
-        → (Optional) Bitcrusher, Echo etc.
-    → Ausgabe an Audiopuffer
+        → Grundwellenform-Generierung (Sinus, Sägezahn, Rechteck, Dreieck)
+        → Modulationseffekte (z. B. Glide, Vibrato, Tremolo, Chirp)
+        → Filteranwendungen (z. B. Bark-Filter, Formantfilter, dynamischer Bandpass)
+        → Waveshaping / Distortion (falls aktiviert)
+        → Bitcrusher / Echo / Comb-Filter (wellenformspezifisch)
+        → Anwendung der ADSR-Hüllkurve auf Amplitude
+    → Schreiben der Samples in den Audiopuffer
+
