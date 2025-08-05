@@ -85,6 +85,15 @@ private:
     juce::Label  sawSweepRateLabel, sawSweepDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawSweepRateAttachment, sawSweepDepthAttachment;
 
+    juce::Slider sawCombTimeSlider;
+    juce::Label  sawCombTimeLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombTimeAttachment;
+
+    juce::Slider sawCombFeedbackSlider;
+    juce::Label  sawCombFeedbackLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombFeedbackAttachment;
+
+
 
     // ===== Square Panel Elements =====
     juce::Slider squarePunchAmountSlider, squarePunchDecaySlider;

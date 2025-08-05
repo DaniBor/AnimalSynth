@@ -177,13 +177,8 @@ void AnimalSynthAudioProcessorEditor::resized()
 
 
     // === Saw Sliders ===
-    sawDistortionAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
-    sawDistortionToneSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
-
-    sawSweepRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
-    sawSweepDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
-
-
+    sawCombTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
+    sawCombFeedbackSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
 
     // === Square Sliders ===
     squarePunchAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
@@ -299,49 +294,28 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
         audioProcessor.parameters, "tremoloRate", tremoloRateSlider);
 
     // ===== Saw Panel =====
-    // Distortion Amount
-    sawDistortionAmountSlider.setSliderStyle(juce::Slider::Rotary);
-    sawDistortionAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawDistortionAmountLabel.setText("Dis Amount", juce::dontSendNotification);
-    sawDistortionAmountLabel.attachToComponent(&sawDistortionAmountSlider, false);
-    sawFXPanel.addAndMakeVisible(sawDistortionAmountSlider);
-    sawFXPanel.addAndMakeVisible(sawDistortionAmountLabel);
+    // Comb Time
+    sawCombTimeSlider.setSliderStyle(juce::Slider::Rotary);
+    sawCombTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawCombTimeLabel.setText("Comb Time", juce::dontSendNotification);
+    sawCombTimeLabel.attachToComponent(&sawCombTimeSlider, false);
+    sawFXPanel.addAndMakeVisible(sawCombTimeSlider);
+    sawFXPanel.addAndMakeVisible(sawCombTimeLabel);
 
-    sawDistortionAmountAttachment = std::make_unique<SliderAttachment>(
-        audioProcessor.parameters, "sawDistortionAmount", sawDistortionAmountSlider);
+    sawCombTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sawCombTime", sawCombTimeSlider);
 
-    // Distortion Tone
-    sawDistortionToneSlider.setSliderStyle(juce::Slider::Rotary);
-    sawDistortionToneSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawDistortionToneLabel.setText("Dis Tone", juce::dontSendNotification);
-    sawDistortionToneLabel.attachToComponent(&sawDistortionToneSlider, false);
-    sawFXPanel.addAndMakeVisible(sawDistortionToneSlider);
-    sawFXPanel.addAndMakeVisible(sawDistortionToneLabel);
+    // Comb Feedback
+    sawCombFeedbackSlider.setSliderStyle(juce::Slider::Rotary);
+    sawCombFeedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawCombFeedbackLabel.setText("Comb Feedback", juce::dontSendNotification);
+    sawCombFeedbackLabel.attachToComponent(&sawCombFeedbackSlider, false);
+    sawFXPanel.addAndMakeVisible(sawCombFeedbackSlider);
+    sawFXPanel.addAndMakeVisible(sawCombFeedbackLabel);
 
-    sawDistortionToneAttachment = std::make_unique<SliderAttachment>(
-        audioProcessor.parameters, "sawDistortionTone", sawDistortionToneSlider);
+    sawCombFeedbackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sawCombFeedback", sawCombFeedbackSlider);
 
-    // Sweep Rate
-    sawSweepRateSlider.setSliderStyle(juce::Slider::Rotary);
-    sawSweepRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawSweepRateLabel.setText("Sweep Rate", juce::dontSendNotification);
-    sawSweepRateLabel.attachToComponent(&sawSweepRateSlider, false);
-    sawFXPanel.addAndMakeVisible(sawSweepRateSlider);
-    sawFXPanel.addAndMakeVisible(sawSweepRateLabel);
-
-    sawSweepRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "sawSweepRate", sawSweepRateSlider);
-
-    // Sweep Depth
-    sawSweepDepthSlider.setSliderStyle(juce::Slider::Rotary);
-    sawSweepDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    sawSweepDepthLabel.setText("Sweep Depth", juce::dontSendNotification);
-    sawSweepDepthLabel.attachToComponent(&sawSweepDepthSlider, false);
-    sawFXPanel.addAndMakeVisible(sawSweepDepthSlider);
-    sawFXPanel.addAndMakeVisible(sawSweepDepthLabel);
-
-    sawSweepDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "sawSweepDepth", sawSweepDepthSlider);
 
 
     // ===== Square Panel =====

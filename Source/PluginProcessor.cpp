@@ -48,21 +48,14 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
 
             // === Saw Params ===
         std::make_unique<juce::AudioParameterFloat>(
-            "sawDistortionAmount", "Saw Distortion Amount",
-            juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f), 3.0f
+            "sawCombTime", "Comb Delay Time",
+            juce::NormalisableRange<float>(1.0f, 30.0f, 0.1f), 10.0f // milliseconds
         ),
         std::make_unique<juce::AudioParameterFloat>(
-            "sawDistortionTone", "Saw Distortion Tone",
-            juce::NormalisableRange<float>(0.0f, 8000.0f, 1.0f), 5000.0f
+            "sawCombFeedback", "Comb Feedback",
+            juce::NormalisableRange<float>(0.0f, 0.70f, 0.01f), 0.25f
         ),
-        std::make_unique<juce::AudioParameterFloat>(
-            "sawSweepRate", "Sweep Rate",
-            juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f), 2.0f
-        ),
-        std::make_unique<juce::AudioParameterFloat>(
-            "sawSweepDepth", "Sweep Depth",
-            juce::NormalisableRange<float>(50.0f, 3000.0f, 1.0f), 1000.0f
-        ),
+
             // === Square Params ===
         std::make_unique<juce::AudioParameterFloat>(
             "squarePunchAmount", "Punch Amount",
@@ -77,7 +70,6 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "squareBitcrushRate", "Bitcrush Rate",
             juce::NormalisableRange<float>(100.0f, 8000.0f, 1.0f), 10000.0f // Hz
         ),
-
         std::make_unique<juce::AudioParameterFloat>(
             "squareBitcrushDepth", "Bitcrush Depth",
             juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 16.0f // Bits
@@ -196,6 +188,8 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     phase = 0.0;
     vibratoPhase = 0.0;
 
+    int waveformIndex = *parameters.getRawParameterValue("waveform");
+
     adsrParams.attack = *parameters.getRawParameterValue("attack");
     adsrParams.decay = *parameters.getRawParameterValue("decay");
     adsrParams.sustain = *parameters.getRawParameterValue("sustain");
@@ -204,6 +198,7 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     adsr.setSampleRate(currentSampleRate);
 
+    // ====== Prepare Sine ======
     flutterAmount.reset(sampleRate, 0.01); // smoothing time
     flutterCounter = 0;
     flutterUpdateInterval = static_cast<int>(sampleRate / *parameters.getRawParameterValue("flutterRate"));
@@ -219,16 +214,12 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     sineFilter.setCutoffFrequency(1000.0f);
     sineFilter.setResonance(0.8f);
 
-    juce::dsp::ProcessSpec sawSpec;
-    sawSpec.sampleRate = sampleRate;
-    sawSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
-    sawSpec.numChannels = getTotalNumOutputChannels();
+    // ====== Prepare Saw ======
+    sawCombBuffer.setSize(getTotalNumOutputChannels(), static_cast<int>(sampleRate * 0.05)); // 50ms max
+    sawCombBuffer.clear();
+    sawCombWritePosition = 0;
 
-    sawFilter.prepare(sawSpec);
-    sawFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
-    sawFilter.setResonance(0.9f);
-    sawFilter.setCutoffFrequency(1200.0f); // Initial center
-
+    // ====== Prepare Square ======
     juce::dsp::ProcessSpec barkSpec{
     sampleRate,
     static_cast<juce::uint32>(samplesPerBlock),
@@ -241,23 +232,13 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     barkFilter.setCutoffFrequency(800.0f);  // Default
     barkFilter.setResonance(1.0f);
 
-    sawDistortion.functionToUse = [](float x) {
-        return std::tanh(x * 3.0f); // Soft clipping / saturation
-        };
 
-    sawDistortion.prepare({
-        sampleRate,
-        static_cast<juce::uint32>(samplesPerBlock),
-        static_cast<juce::uint32>(getTotalNumOutputChannels())
-        });
-
-    int waveformIndex = *parameters.getRawParameterValue("waveform");
-
-    echoBuffer.setSize(getTotalNumOutputChannels(), (int)(getSampleRate() * 0.5)); // 500 ms max
+    // ====== Prepare Triangle ======
+    echoBuffer.setSize(getTotalNumOutputChannels(), (int)(getSampleRate() * 2)); // 500 ms max
     echoBuffer.clear();
     echoWritePosition = 0;
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     if (e != nullptr) {
         e->animationPlaceholder.setNewAnimal(waveformIndex);
     }
@@ -361,7 +342,7 @@ void AnimalSynthAudioProcessor::setStateInformation (const void* data, int sizeI
 }
 
 //==============================================================================
-// This creates new instances of the plugin..
+// This creates new instances of the plugin.
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AnimalSynthAudioProcessor();
@@ -479,27 +460,26 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
 
 void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    auto numSamples = buffer.getNumSamples();
-    auto numChannels = buffer.getNumChannels();
-    auto sampleRate = getSampleRate();
+    const int numSamples = buffer.getNumSamples();
+    const int numChannels = buffer.getNumChannels();
+    const double sampleRate = getSampleRate();
 
-    // === Handle MIDI ===
+    float combDelayMs = *parameters.getRawParameterValue("sawCombTime");
+    float combFeedback = *parameters.getRawParameterValue("sawCombFeedback");
+
+    int maxDelaySamples = sawCombBuffer.getNumSamples();
+    int delaySamples = static_cast<int>((combDelayMs / 1000.0f) * sampleRate);
+    delaySamples = std::clamp(delaySamples, 1, maxDelaySamples - 1);
+
     for (const auto metadata : midi)
     {
         const auto msg = metadata.getMessage();
-
         if (msg.isNoteOn())
         {
             midiNote = msg.getNoteNumber();
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
-
             phaseIncrement = freq / sampleRate;
-            //phase = 0.0;
             adsr.noteOn();
-
-            // Trigger filter envelope
-            sawFilterEnvelope = 1.0f;
-            sawFilterEnvIncrement = 1.0f / (sampleRate * 0.25f); // 250ms decay
         }
         else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
         {
@@ -507,63 +487,46 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
-
-    // === Synthesis loop ===
-    if (adsr.isActive() && e != nullptr)
+    if (adsr.isActive())
     {
-        float toneCutoff = *parameters.getRawParameterValue("sawDistortionTone");
-        sawPostFilter.setCutoffFrequency(toneCutoff);
-
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
-            e->animationPlaceholder.setEnvelopeLevel(env);
 
-            // Generate saw wave
             float rawSaw = 2.0f * static_cast<float>(phase) - 1.0f;
+            float currentSample = rawSaw * env;
+
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                float* delayData = sawCombBuffer.getWritePointer(ch);
+                float* output = buffer.getWritePointer(ch);
+
+                int readPos = (sawCombWritePosition + maxDelaySamples - delaySamples) % maxDelaySamples;
+                float delayed = delayData[readPos];
+
+                float processed = currentSample + delayed * combFeedback;
+
+                output[sample] = processed;
+
+                delayData[sawCombWritePosition] = processed;
+            }
+
             phase += phaseIncrement;
             if (phase >= 1.0)
                 phase -= 1.0;
 
-            // Filter envelope decay
-            if (sawFilterEnvelope > 0.0f)
-            {
-                sawFilterEnvelope -= sawFilterEnvIncrement;
-                if (sawFilterEnvelope < 0.0f)
-                    sawFilterEnvelope = 0.0f;
-            }
-
-            // Pre-filter
-            float preCutoff = 600.0f + sawFilterEnvelope * 3000.0f;
-            sawFilter.setCutoffFrequency(preCutoff);
-            float filtered = sawFilter.processSample(0, rawSaw) * env;
-
-            // Distortion
-            float distortionAmount = *parameters.getRawParameterValue("sawDistortionAmount");
-            float distorted = std::tanh(filtered * distortionAmount);
-
-            // Post-filter (tone shaping)
-            float postFiltered = sawPostFilter.processSample(0, distorted);
-
-            // Amplitude modulation for growl
-            float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * amPhase) * amDepth);
-            amPhase += amRate / getSampleRate();
-            if (amPhase >= 1.0f)
-                amPhase -= 1.0f;
-
-            float finalSample = postFiltered * env * am;
-
-            for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-                buffer.setSample(channel, sample, finalSample);
+            sawCombWritePosition = (sawCombWritePosition + 1) % maxDelaySamples;
         }
     }
     else
     {
         buffer.clear();
+        sawCombBuffer.clear();
+        sawCombWritePosition = 0;
     }
-
 }
+
+
 
 void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
@@ -720,7 +683,7 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
         }
     }
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
 
     if (!adsr.isActive())
     {
