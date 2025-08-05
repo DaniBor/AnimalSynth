@@ -21,11 +21,21 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
+
+    /// @warning The AudioScope has to be set up BEFORE setting the size of the Plugin window otherwise it crashes! DO NOT MOVE THIS!
     audioScope = std::make_unique<ScaledVisualiserComponent>(1024);
+    audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
+    {
+        if(audioScope)
+            audioScope->pushBuffer(b);
+    };
+    addAndMakeVisible(*audioScope);
 
     setSize (500, 375);
 
     setLookAndFeel(&customLookAndFeel);
+
+    auto& par = audioProcessor.parameters;
 
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::background_jpg, BinaryData::background_jpgSize);
 
@@ -55,8 +65,6 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     styleKnob(sustainSlider); addAndMakeVisible(sustainSlider);
     styleKnob(releaseSlider); addAndMakeVisible(releaseSlider);
 
-    auto& par = audioProcessor.parameters;
-
     attackAttachment = std::make_unique<SliderAttachment>(par, "attack", attackSlider);
     decayAttachment = std::make_unique<SliderAttachment>(par, "decay", decaySlider);
     sustainAttachment = std::make_unique<SliderAttachment>(par, "sustain", sustainSlider);
@@ -74,17 +82,19 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     triangleFXPanel.setImage(triangleImage);
     addAndMakeVisible(triangleFXPanel);
 
-    animationPlaceholder.setNewAnimal(0);
-    polyMalButton.setNewAnimal(99);
+    wildlifeCam.setNewAnimal(0);
+    logoPanel.setNewAnimal(99);
 
-    animationPlaceholder.setInterceptsMouseClicks(false, false);
-    animationPlaceholder.setText("Animation Placeholder");
-    addAndMakeVisible(animationPlaceholder);
+    wildlifeCam.setInterceptsMouseClicks(false, false);
+    wildlifeCam.setText("Animation Placeholder");
+    addAndMakeVisible(wildlifeCam);
 
     setupEffectPanels();
 
-    polyMalButton.setText("PolyMal");
-    addAndMakeVisible(polyMalButton);
+    logoPanel.setText("PolyMal");
+    addAndMakeVisible(logoPanel);
+
+#pragma region Slider Text Overrides
 
     // Saw Shape text display — show "Off" if drive is OFF
     sawShapeSlider.textFromValueFunction = [this](double value) {
@@ -95,21 +105,16 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
     sawDriveSlider.textFromValueFunction = [](double value) {
         return (value <= 0.9) ? juce::String("Off") : juce::String(value, 1);
     };
+    // Force Shape Slider to show "Off" if drive if off
     sawDriveSlider.onValueChange = [this]() {
         sawShapeSlider.setTextValueSuffix(""); // optional, reset suffix
         sawShapeSlider.updateText();           // force update display
     };
 
-    
-    audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
-        {
-            if(audioScope)
-                audioScope->pushBuffer(b);
-        };
+#pragma endregion
 
-    addAndMakeVisible(*audioScope);
 
-    
+
 }
 
 AnimalSynthAudioProcessorEditor::~AnimalSynthAudioProcessorEditor()
@@ -143,7 +148,7 @@ void AnimalSynthAudioProcessorEditor::resized()
     waveformColumn.removeFromTop(10);
     audioScope->setBounds(waveformColumn.removeFromTop(110));
     
-    animationPlaceholder.setBounds(animationBounds);
+    wildlifeCam.setBounds(animationBounds);
     
     // FX panel area
     auto fxBounds = bounds.removeFromTop(100);
@@ -169,23 +174,27 @@ void AnimalSynthAudioProcessorEditor::resized()
     }
 
     // Reuse animation component as second placeholder
-    polyMalButton.setBounds(adsrPlaceholderArea);
+    logoPanel.setBounds(adsrPlaceholderArea);
 
     // FX sliders
     const int fxSliderSize = 60;
     int sliderPadding = 20;
     int yPos = 35;
+    int titleLabelOffset = 40;
+    int titleLabelYPos = -20;
 
     // === Sine Sliders ===
-    vibratoRateSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
-    vibratoDepthSlider.setBounds(10 + sliderPadding + fxSliderSize, yPos, fxSliderSize, fxSliderSize);
+    vibratoDepthSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
+    vibratoRateSlider.setBounds(10 + sliderPadding + fxSliderSize, yPos, fxSliderSize, fxSliderSize);
+    vibratoLabel.setBounds(10 + titleLabelOffset, titleLabelYPos, 60, 60);
 
-    flutterRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
-    flutterDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+    chorusDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    chorusRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+    chorusLabel.setBounds(10 + titleLabelOffset * 5, titleLabelYPos, 60, 60);
 
-    tremoloRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
-    tremoloDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
-
+    tremoloDepthSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    tremoloRateSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+    tremoloLabel.setBounds(10 + titleLabelOffset * 9, titleLabelYPos, 60, 60);
 
     // === Saw Sliders ===
     sawCombTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
@@ -222,7 +231,9 @@ void AnimalSynthAudioProcessorEditor::resized()
 
 }
 
-
+/**
+ * @brief Wechselt zwischen den Panels wenn ein neues ausgewählt wird
+ */
 void AnimalSynthAudioProcessorEditor::updateEffectUI()
 {
     sineFXPanel.setVisible(false);
@@ -241,14 +252,22 @@ void AnimalSynthAudioProcessorEditor::updateEffectUI()
     repaint();
 }
 
-
+/**
+ * @brief Bereitet alle Slider und Labels der FX Panele vor
+ */
 void AnimalSynthAudioProcessorEditor::setupEffectPanels()
 {
     // ===== Sine Panel =====
+    // === Vibrato ===
+    vibratoLabel.setText("Vibrato", juce::dontSendNotification);
+    vibratoLabel.setJustificationType(juce::Justification::centred);
+    sineFXPanel.addAndMakeVisible(vibratoLabel);
+
     // Vibrato Rate
     vibratoRateSlider.setSliderStyle(juce::Slider::Rotary);
     vibratoRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    vibratoRateLabel.setText("Vib Rate", juce::dontSendNotification);
+    vibratoRateLabel.setText("Rate", juce::dontSendNotification);
+    vibratoRateLabel.setJustificationType(juce::Justification::centred);
     vibratoRateLabel.attachToComponent(&vibratoRateSlider, false);
     sineFXPanel.addAndMakeVisible(vibratoRateSlider);
     sineFXPanel.addAndMakeVisible(vibratoRateLabel);
@@ -259,7 +278,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     // Vibrato Depth
     vibratoDepthSlider.setSliderStyle(juce::Slider::Rotary);
     vibratoDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    vibratoDepthLabel.setText("Vib Depth", juce::dontSendNotification);
+    vibratoDepthLabel.setText("Depth", juce::dontSendNotification);
+    vibratoDepthLabel.setJustificationType(juce::Justification::centred);
     vibratoDepthLabel.attachToComponent(&vibratoDepthSlider, false);
     sineFXPanel.addAndMakeVisible(vibratoDepthSlider);
     sineFXPanel.addAndMakeVisible(vibratoDepthLabel);
@@ -267,32 +287,44 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     vibratoDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "vibratoDepth", vibratoDepthSlider);
 
-    // Flutter Depth
-    flutterDepthSlider.setSliderStyle(juce::Slider::Rotary);
-    flutterDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    flutterDepthLabel.setText("Flut Depth", juce::dontSendNotification);
-    flutterDepthLabel.attachToComponent(&flutterDepthSlider, false);
-    sineFXPanel.addAndMakeVisible(flutterDepthSlider);
-    sineFXPanel.addAndMakeVisible(flutterDepthLabel);
 
-    flutterDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "flutterDepth", flutterDepthSlider);
+    // === Flutter ===
+    chorusLabel.setText("Chorus", juce::dontSendNotification);
+    chorusLabel.setJustificationType(juce::Justification::centred);
+    sineFXPanel.addAndMakeVisible(chorusLabel);
+    // Flutter Depth
+    chorusDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    chorusDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    chorusDepthLabel.setText("Depth", juce::dontSendNotification);
+    chorusDepthLabel.setJustificationType(juce::Justification::centred);
+    chorusDepthLabel.attachToComponent(&chorusDepthSlider, false);
+    sineFXPanel.addAndMakeVisible(chorusDepthSlider);
+    sineFXPanel.addAndMakeVisible(chorusDepthLabel);
+
+    chorusDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sineChorusDepth", chorusDepthSlider);
 
     // Flutter Rate
-    flutterRateSlider.setSliderStyle(juce::Slider::Rotary);
-    flutterRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    flutterRateLabel.setText("Flut Rate", juce::dontSendNotification);
-    flutterRateLabel.attachToComponent(&flutterRateSlider, false);
-    sineFXPanel.addAndMakeVisible(flutterRateSlider);
-    sineFXPanel.addAndMakeVisible(flutterRateLabel);
+    chorusRateSlider.setSliderStyle(juce::Slider::Rotary);
+    chorusRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    chorusRateLabel.setText("Rate", juce::dontSendNotification);
+    chorusRateLabel.setJustificationType(juce::Justification::centred);
+    chorusRateLabel.attachToComponent(&chorusRateSlider, false);
+    sineFXPanel.addAndMakeVisible(chorusRateSlider);
+    sineFXPanel.addAndMakeVisible(chorusRateLabel);
 
-    flutterRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "flutterRate", flutterRateSlider);
-    
+    chorusRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sineChorusRate", chorusRateSlider);
+
+    // === Tremolo ===
+    tremoloLabel.setText("Tremolo", juce::dontSendNotification);
+    tremoloLabel.setJustificationType(juce::Justification::centred);
+    sineFXPanel.addAndMakeVisible(tremoloLabel);
     //Tremolo Depth
     tremoloDepthSlider.setSliderStyle(juce::Slider::Rotary);
     tremoloDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    tremoloDepthLabel.setText("Trem Depth", juce::dontSendNotification);
+    tremoloDepthLabel.setText("Depth", juce::dontSendNotification);
+    tremoloDepthLabel.setJustificationType(juce::Justification::centred);
     tremoloDepthLabel.attachToComponent(&tremoloDepthSlider, false);
     sineFXPanel.addAndMakeVisible(tremoloDepthSlider);
     sineFXPanel.addAndMakeVisible(tremoloDepthLabel);
@@ -303,7 +335,8 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     //Tremolo Rate
     tremoloRateSlider.setSliderStyle(juce::Slider::Rotary);
     tremoloRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    tremoloRateLabel.setText("Trem Rate", juce::dontSendNotification);
+    tremoloRateLabel.setText("Rate", juce::dontSendNotification);
+    tremoloRateLabel.setJustificationType(juce::Justification::centred);
     tremoloRateLabel.attachToComponent(&tremoloRateSlider, false);
     sineFXPanel.addAndMakeVisible(tremoloRateSlider);
     sineFXPanel.addAndMakeVisible(tremoloRateLabel);

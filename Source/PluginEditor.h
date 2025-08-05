@@ -36,7 +36,7 @@ public:
 	void updateEffectUI();
     void setupEffectPanels();
 
-    AnimationDisplayComponent animationPlaceholder;
+    AnimationDisplayComponent wildlifeCam;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -53,7 +53,7 @@ private:
 
     CustomLookAndFeel customLookAndFeel;
 
-    AnimationDisplayComponent polyMalButton;
+    AnimationDisplayComponent logoPanel;
     AnimationDisplayComponent waveVisualizer;
 
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
@@ -64,15 +64,15 @@ private:
 #pragma region PanelElements
     // ===== Sine Panel Elements =====
     juce::Slider vibratoRateSlider, vibratoDepthSlider;
-    juce::Label vibratoRateLabel, vibratoDepthLabel;
+    juce::Label vibratoLabel, vibratoRateLabel, vibratoDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoRateAttachment, vibratoDepthAttachment;
 
-    juce::Slider flutterRateSlider, flutterDepthSlider;
-    juce::Label flutterRateLabel, flutterDepthLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterRateAttachment, flutterDepthAttachment;
+    juce::Slider chorusRateSlider, chorusDepthSlider;
+    juce::Label chorusLabel, chorusRateLabel, chorusDepthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chorusRateAttachment, chorusDepthAttachment;
 
     juce::Slider tremoloRateSlider, tremoloDepthSlider;
-    juce::Label tremoloRateLabel, tremoloDepthLabel;
+    juce::Label tremoloLabel, tremoloRateLabel, tremoloDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tremoloRateAttachment, tremoloDepthAttachment;
 
 

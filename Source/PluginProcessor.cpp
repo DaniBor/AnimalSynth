@@ -41,8 +41,8 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             // === Sine Params ===
         std::make_unique<juce::AudioParameterFloat>("vibratoRate", "Vibrato Rate", 0.0f, 10.0f, 5.0f),
         std::make_unique<juce::AudioParameterFloat>("vibratoDepth", "Vibrato Depth", 0.0f, 0.05f, 0.001f),
-        std::make_unique<juce::AudioParameterFloat>("flutterDepth", "Flutter Depth", 0.0f, 0.05f, 0.01f),
-        std::make_unique<juce::AudioParameterFloat>("flutterRate",  "Flutter Rate",  0.0f, 20.0f, 5.0f),
+        std::make_unique<juce::AudioParameterFloat>("sineChorusRate", "Chorus Rate", 0.0f, 10.0f, 1.5f),
+        std::make_unique<juce::AudioParameterFloat>("sineChorusDepth", "Chorus Depth", 0.0f, 1.0f, 0.3f),
         std::make_unique<juce::AudioParameterFloat>("tremoloDepth", "Tremolo Depth", 0.0f, 1.0f, 0.5f),
         std::make_unique<juce::AudioParameterFloat>("tremoloRate",  "Tremolo Rate",  0.0f, 20.0f, 4.0f),
 
@@ -215,9 +215,14 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     adsr.setSampleRate(currentSampleRate);
 
     // ====== Prepare Sine ======
-    flutterAmount.reset(sampleRate, 0.01); // smoothing time
-    flutterCounter = 0;
-    flutterUpdateInterval = static_cast<int>(sampleRate / *parameters.getRawParameterValue("flutterRate"));
+    juce::dsp::ProcessSpec chrousSpec;
+    chrousSpec.sampleRate = sampleRate;
+    chrousSpec.maximumBlockSize = samplesPerBlock;
+    chrousSpec.numChannels = getTotalNumOutputChannels();
+
+    sineChorus.prepare(chrousSpec);
+    sineChorus.setMix(0.5f); // 50% wet/dry mix
+
 
     juce::dsp::ProcessSpec sineSpec;
     sineSpec.sampleRate = currentSampleRate;
@@ -267,7 +272,7 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     if (e != nullptr) {
-        e->animationPlaceholder.setNewAnimal(waveformIndex);
+        e->wildlifeCam.setNewAnimal(waveformIndex);
     }
 }
 
@@ -314,8 +319,8 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     int currentWaveformIndex = *parameters.getRawParameterValue("waveform");
 
-    if (e != nullptr && currentWaveformIndex != e->animationPlaceholder.getIndex()) {
-        e->animationPlaceholder.setNewAnimal(currentWaveformIndex);
+    if (e != nullptr && currentWaveformIndex != e->wildlifeCam.getIndex()) {
+        e->wildlifeCam.setNewAnimal(currentWaveformIndex);
     }
 
     buffer.clear();
@@ -384,6 +389,11 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
     vibratoRate = *parameters.getRawParameterValue("vibratoRate");
     vibratoDepth = *parameters.getRawParameterValue("vibratoDepth");
 
+    juce::dsp::AudioBlock<float> block(buffer);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    sineChorus.setRate(*parameters.getRawParameterValue("sineChorusRate"));
+    sineChorus.setDepth(*parameters.getRawParameterValue("sineChorusDepth"));
+
     float tremoloRate = *parameters.getRawParameterValue("tremoloRate");
     float tremoloDepth = *parameters.getRawParameterValue("tremoloDepth");
 
@@ -420,46 +430,32 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float env = adsr.getNextSample(); // ADSR envelope
+            float env = adsr.getNextSample();
             float currentSample = 0.0f;
 
-            
-            e->animationPlaceholder.setEnvelopeLevel(env);
+            e->wildlifeCam.setEnvelopeLevel(env);
 
-            // Vibrato (LFO on frequency)
+            // Vibrato
             float vibrato = std::sin(2.0 * juce::MathConstants<double>::pi * vibratoPhase) * vibratoDepth;
             vibratoPhase += vibratoRate / currentSampleRate;
             if (vibratoPhase >= 1.0)
                 vibratoPhase -= 1.0;
 
-            // Flutter update
-            if (++flutterCounter >= flutterUpdateInterval)
-            {
-                flutterCounter = 0;
-                float depth = *parameters.getRawParameterValue("flutterDepth");
-                float randomValue = juce::Random::getSystemRandom().nextFloat() * 2.0f - 1.0f;
-                flutterAmount.setTargetValue(randomValue * depth);
-            }
+            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato);
 
-            float flutter = flutterAmount.getNextValue();
-
-            // Phase increment with vibrato and flutter
-            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato + flutter);
-
-            // Amplitude modulation
+            // Tremolo
             float tremolo = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * tremoloPhase) * tremoloDepth);
             tremoloPhase += tremoloRate / currentSampleRate;
             if (tremoloPhase >= 1.0f)
                 tremoloPhase -= 1.0f;
 
-
-            // Sine wave generation
+            // Sine generation
             float rawSine = std::sin(2.0 * juce::MathConstants<double>::pi * phase);
             phase += modulatedPhaseInc;
             if (phase >= 1.0)
                 phase -= 1.0;
 
-            // Filter envelope decay
+            // Filter envelope
             if (sinefilterEnvelope > 0.0f)
             {
                 sinefilterEnvelope -= sineFilterEnvIncrement;
@@ -467,16 +463,20 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
                     sinefilterEnvelope = 0.0f;
             }
 
-            // Modulate filter cutoff frequency
             float cutoff = 300.0f + sinefilterEnvelope * 4000.0f;
             sineFilter.setCutoffFrequency(cutoff);
+            float filtered = sineFilter.processSample(0, rawSine);
 
-            // Apply filter to sine wave
-            currentSample = sineFilter.processSample(0, rawSine) * env * tremolo;
+            currentSample = filtered * env * tremolo;
 
             for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
                 buffer.setSample(channel, sample, currentSample);
         }
+        sineChorus.setCentreDelay(10.0f);  // Default value, tweak if needed
+        sineChorus.setFeedback(0.0f);      // Optional
+        sineChorus.setMix(0.4f);           // Wet/dry balance
+
+        sineChorus.process(context);
     }
     else
     {
@@ -622,7 +622,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
         for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
-            e->animationPlaceholder.setEnvelopeLevel(env);
+            e->wildlifeCam.setEnvelopeLevel(env);
             float rawSample = (phase < 0.5f) ? 1.0f : -1.0f;
 
             // --- Punch Envelope ---
@@ -752,7 +752,7 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
     for (int sample = 0; sample < numSamples; ++sample)
     {
         float env = adsr.getNextSample();
-        if (e != nullptr) e->animationPlaceholder.setEnvelopeLevel(env);
+        if (e != nullptr) e->wildlifeCam.setEnvelopeLevel(env);
 
         // === Glide Update ===
         if (glideSamplesLeft > 0)
