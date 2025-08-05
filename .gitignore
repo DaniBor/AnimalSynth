@@ -1,2 +1,4 @@
 Builds/
+Doxygen/
 JuceLibraryCode/
+cmake-build-debug-llvm/

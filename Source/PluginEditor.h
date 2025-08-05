@@ -7,8 +7,9 @@
 */
 
 #pragma once
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 
-#include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "ScaledVisualizerComponent.h"
 #include "FXPanel.h"
@@ -35,81 +36,91 @@ public:
 	void updateEffectUI();
     void setupEffectPanels();
 
-    AnimationDisplayComponent animationPlaceholder;
+    AnimationDisplayComponent wildlifeCam;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     AnimalSynthAudioProcessor& audioProcessor;
 
-    juce::Image backgroundImage;
+    CustomLookAndFeel customLookAndFeel;
 
+    /// ===== Panels and Assets =====
+    juce::Image backgroundImage;
     juce::Image sineImage, sawImage, squareImage, triangleImage;
     FXPanel sineFXPanel, sawFXPanel, squareFXPanel, triangleFXPanel;
 
     juce::ComboBox waveformSelector;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
 
-    CustomLookAndFeel customLookAndFeel;
 
-    AnimationDisplayComponent polyMalButton;
+
+    AnimationDisplayComponent logoPanel;
     AnimationDisplayComponent waveVisualizer;
-
+    /// ===== ADSR Elements =====
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
+    juce::Label attackLabel, decayLabel, sustainLabel, releaseLabel;
 
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     std::unique_ptr<SliderAttachment> attackAttachment, decayAttachment, sustainAttachment, releaseAttachment;
 
 #pragma region PanelElements
-    // ===== Sine Panel Elements =====
+    /// ===== Sine Panel Elements =====
     juce::Slider vibratoRateSlider, vibratoDepthSlider;
-    juce::Label vibratoRateLabel, vibratoDepthLabel;
+    juce::Label vibratoLabel, vibratoRateLabel, vibratoDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> vibratoRateAttachment, vibratoDepthAttachment;
 
-    juce::Slider flutterRateSlider, flutterDepthSlider;
-    juce::Label flutterRateLabel, flutterDepthLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterRateAttachment, flutterDepthAttachment;
+    juce::Slider chorusRateSlider, chorusDepthSlider;
+    juce::Label chorusLabel, chorusRateLabel, chorusDepthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chorusRateAttachment, chorusDepthAttachment;
 
     juce::Slider tremoloRateSlider, tremoloDepthSlider;
-    juce::Label tremoloRateLabel, tremoloDepthLabel;
+    juce::Label tremoloLabel, tremoloRateLabel, tremoloDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tremoloRateAttachment, tremoloDepthAttachment;
 
 
-    // ===== Saw Panel Elements =====
-    juce::Slider sawDistortionAmountSlider, sawDistortionToneSlider;
-    juce::Label sawDistortionAmountLabel, sawDistortionToneLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionAmountAttachment, sawDistortionToneAttachment;
+    /// ===== Saw Panel Elements =====
+    juce::Slider sawCombTimeSlider, sawCombFeedbackSlider;
+    juce::Label  sawCombLabel, sawCombTimeLabel, sawCombFeedbackLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombTimeAttachment, sawCombFeedbackAttachment;
 
-    juce::Slider sawSweepRateSlider, sawSweepDepthSlider;
-    juce::Label  sawSweepRateLabel, sawSweepDepthLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawSweepRateAttachment, sawSweepDepthAttachment;
+    juce::Slider formantFreqSlider, formantResSlider;
+    juce::Label formantLabel, formantFreqLabel, formantResLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> formantFreqAttachment, formantResAttachment;
+
+    juce::Slider sawDriveSlider, sawShapeSlider;
+    juce::Label waveshapeLabel, sawDriveLabel, sawShapeLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDriveAttachment, sawShapeAttachment;
 
 
-    // ===== Square Panel Elements =====
+
+
+
+    /// ===== Square Panel Elements =====
     juce::Slider squarePunchAmountSlider, squarePunchDecaySlider;
-    juce::Label squarePunchAmountLabel, squarePunchDecayLabel;
+    juce::Label punchLabel, squarePunchAmountLabel, squarePunchDecayLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePunchAmountAttachment, squarePunchDecayAttachment;
 
     juce::Slider squareBitcrushRateSlider, squareBitcrushDepthSlider;
-    juce::Label squareBitcrushRateLabel, squareBitcrushDepthLabel;
+    juce::Label bitcrushLabel, squareBitcrushRateLabel, squareBitcrushDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squareBitcrushRateAttachment, squareBitcrushDepthAttachment;
 
     juce::Slider barkFilterFreqSlider, barkFilterResSlider;
-    juce::Label barkFilterFreqLabel, barkFilterResLabel;
+    juce::Label barkFilterLabel, barkFilterFreqLabel, barkFilterResLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> barkFilterFreqAttachment, barkFilterResAttachment;
 
 
-    // ===== Triangle Panel Elements =====
+    /// ===== Triangle Panel Elements =====
     juce::Slider triGlideTimeSlider, triGlideDepthSlider;
-    juce::Label triGlideTimeLabel, triGlideDepthLabel;
+    juce::Label glideLabel, triGlideTimeLabel, triGlideDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triGlideTimeAttachment, triGlideDepthAttachment;
 
     juce::Slider triChirpRateSlider, triChirpDepthSlider;
-    juce::Label triChirpRateLabel, triChirpDepthLabel;
+    juce::Label chirpLabel, triChirpRateLabel, triChirpDepthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triChirpRateAttachment, triChirpDepthAttachment;
 
     juce::Slider triEchoTimeSlider, triEchoMixSlider;
-    juce::Label triEchoTimeLabel, triEchoMixLabel;
+    juce::Label echoLabel, triEchoTimeLabel, triEchoMixLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> triEchoTimeAttachment, triEchoMixAttachment;
 #pragma endregion
 

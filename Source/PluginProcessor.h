@@ -7,8 +7,10 @@
 */
 
 #pragma once
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+#include <juce_core/juce_core.h>
 
-#include <JuceHeader.h>
 
 
 //==============================================================================
@@ -88,7 +90,7 @@ private:
     void processTriangleWave(juce::AudioBuffer<float>&, juce::MidiBuffer&);
 
 
-    // === Sine Filter and FX ===
+    /// === Sine Filter and FX ===
     juce::dsp::StateVariableTPTFilter<float> sineFilter;
     float sinefilterEnvelope = 0.0f;
     float sineFilterEnvIncrement = 0.0f;
@@ -97,30 +99,20 @@ private:
     double vibratoRate = 5.0;
     double vibratoDepth = 0.005;
 
-    juce::SmoothedValue<float> flutterAmount;
-    int flutterCounter = 0;
-    int flutterUpdateInterval = 0;
+    juce::dsp::Chorus<float> sineChorus;
 
     float tremoloPhase = 0.0f;
 
-    // === Saw Filter and FX ===
-    juce::dsp::StateVariableTPTFilter<float> sawFilter;
-    float sawFilterEnvelope = 0.0f;
-    float sawFilterEnvIncrement = 0.0f;
-
-    juce::dsp::WaveShaper<float> sawDistortion;
-    juce::dsp::StateVariableTPTFilter<float> sawPostFilter;
+    /// === Saw Filter and FX ===
+    // Comb filter
+    juce::AudioBuffer<float> sawCombBuffer;
+    int sawCombWritePosition = 0;
 
 
-    float amPhase = 0.0f;
-    float amRate = 30.0f; // Hz
-    float amDepth = 0.3f; // Strength of modulation
+    juce::dsp::StateVariableTPTFilter<float> formantFilter;
 
-    float sweepRate = 0.0f;
-    float sweepDepth = 0.0f;
-    float sweepPhase = 0.0f;
 
-    // === Square Filter and FX ===
+    /// === Square Filter and FX ===
     float squarePunchLevel = 0.0f;
     float squarePunchDecayRate = 0.0f;
 
@@ -131,7 +123,7 @@ private:
     float barkFilterEnvelope = 0.0f;
     float barkFilterDecayRate = 0.0f;
 
-    // === Triangle Filter and FX ===
+    /// === Triangle Filter and FX ===
     double glideStartFreq = 0.0f;
     double glideTargetFreq = 0.0f;
     double glideCurrentFreq = 0.0f;

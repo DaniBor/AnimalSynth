@@ -1,10 +1,20 @@
 ﻿#include "AnimationDisplayComponent.h"
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_graphics/juce_graphics.h>
+#include <juce_core/juce_core.h>
+
+#include <BinaryData.h>
 
 AnimationDisplayComponent::AnimationDisplayComponent()
 {
     startTimerHz(60); // ~60 FPS for smooth animation
 }
 
+/**
+ * @brief loads a series of images from the assets folder.
+ *
+ * @param animalName The Name of the Folder that contains the images. Both the folder and images need to have the same name!
+ */
 void AnimationDisplayComponent::loadFrames(const juce::String& animalName)
 {
     frames.clear();
@@ -31,11 +41,17 @@ void AnimationDisplayComponent::loadFrames(const juce::String& animalName)
     repaint();
 }
 
+
+/**
+ * @brief Overridden version of the base juce::Component paint.
+ *
+ * Takes the current ADSR envelope and uses it to choose which frame to display.
+ * @note If there is no images loaded it displayes a black rectangle with placeholder text.
+ *
+ * @param g The Graphic to be displayed
+ */
 void AnimationDisplayComponent::paint(juce::Graphics& g)
 {
-    
-
-
     if (!frames.empty())
     {
         int index = static_cast<int>(envelopeLevel.load() * static_cast<float>(frames.size() - 1));
@@ -75,21 +91,32 @@ void AnimationDisplayComponent::setFrames(std::vector<juce::Image> newFrames)
     repaint();
 }
 
+/**
+ * @brief Set the animal (or just series of images) to be displayed.
+ *
+ * @note Technically you can display static images too if you just give it one Frame. Though I don't see why someone would do that. It would be too silly.
+ *
+ * @param waveformIndex The index of the waveform that is being played
+ */
 void AnimationDisplayComponent::setNewAnimal(int waveformIndex)
 {
     curIndex = waveformIndex;
 
     switch (waveformIndex)
     {
-    case 0: loadFrames("wolf"); break;     // Sine
+    case 0: loadFrames("wolf"); break;      // Sine
     case 1: loadFrames("bear"); break;      // Saw
-    case 2: loadFrames("dog"); break;    // Square
-    case 3: loadFrames("bird"); break;     // Triangle
-    case 99: loadFrames("logo"); break;
+    case 2: loadFrames("dog"); break;       // Square
+    case 3: loadFrames("bird"); break;      // Triangle
+    case 99: loadFrames("logo"); break;     // The Logo
     default: loadFrames("bear"); break;
     }
 }
 
+/**
+ *
+ * @return Returns the current Animal that is being displayed.
+ */
 int AnimationDisplayComponent::getIndex()
 {
     return curIndex;

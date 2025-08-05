@@ -9,6 +9,10 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "AnimationDisplayComponent.h"
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+
+
 
 //==============================================================================
 AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
@@ -32,39 +36,47 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
         std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  0.01f, 1.0f, 0.1f),
         std::make_unique<juce::AudioParameterFloat>("decay",   "Decay",   0.01f, 1.0f, 0.2f),
         std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.0f,  1.0f, 0.8f),
-        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 5.0f, 0.5f),
+        std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.01f, 3.0f, 0.5f),
 
             // === Sine Params ===
         std::make_unique<juce::AudioParameterFloat>("vibratoRate", "Vibrato Rate", 0.0f, 10.0f, 5.0f),
         std::make_unique<juce::AudioParameterFloat>("vibratoDepth", "Vibrato Depth", 0.0f, 0.05f, 0.001f),
-        std::make_unique<juce::AudioParameterFloat>("flutterDepth", "Flutter Depth", 0.0f, 0.05f, 0.01f),
-        std::make_unique<juce::AudioParameterFloat>("flutterRate",  "Flutter Rate",  0.0f, 20.0f, 5.0f),
+        std::make_unique<juce::AudioParameterFloat>("sineChorusRate", "Chorus Rate", 0.0f, 10.0f, 1.5f),
+        std::make_unique<juce::AudioParameterFloat>("sineChorusDepth", "Chorus Depth", 0.0f, 1.0f, 0.3f),
         std::make_unique<juce::AudioParameterFloat>("tremoloDepth", "Tremolo Depth", 0.0f, 1.0f, 0.5f),
         std::make_unique<juce::AudioParameterFloat>("tremoloRate",  "Tremolo Rate",  0.0f, 20.0f, 4.0f),
 
             // === Saw Params ===
         std::make_unique<juce::AudioParameterFloat>(
-            "sawDistortionAmount", "Saw Distortion Amount",
-            juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f), 3.0f
+            "sawCombTime", "Comb Delay Time",
+            juce::NormalisableRange<float>(1.0f, 30.0f, 0.1f), 10.0f // milliseconds
         ),
         std::make_unique<juce::AudioParameterFloat>(
-            "sawDistortionTone", "Saw Distortion Tone",
-            juce::NormalisableRange<float>(0.0f, 8000.0f, 1.0f), 5000.0f
+            "sawCombFeedback", "Comb Feedback",
+            juce::NormalisableRange<float>(0.0f, 0.70f, 0.01f), 0.25f
         ),
         std::make_unique<juce::AudioParameterFloat>(
-            "sawSweepRate", "Sweep Rate",
-            juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f), 2.0f
-        ),
+            "formantFreq", "Formant Frequency",
+            juce::NormalisableRange<float>(200.0f, 2000.0f, 1.0f), 800.0f
+            ),
         std::make_unique<juce::AudioParameterFloat>(
-            "sawSweepDepth", "Sweep Depth",
-            juce::NormalisableRange<float>(50.0f, 3000.0f, 1.0f), 1000.0f
-        ),
+            "formantResonance", "Formant Resonance",
+            juce::NormalisableRange<float>(0.0f, 2.5f, 0.01f), 1.0f
+            ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawDrive", "Drive",
+            juce::NormalisableRange<float>(0.9f, 10.0f, 0.1f), 3.0f
+            ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawShape", "Shape",
+            juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f
+            ),
+
             // === Square Params ===
         std::make_unique<juce::AudioParameterFloat>(
             "squarePunchAmount", "Punch Amount",
             juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.7f
         ),
-
         std::make_unique<juce::AudioParameterFloat>(
             "squarePunchDecay", "Punch Decay",
             juce::NormalisableRange<float>(0.01f, 0.3f, 0.01f), 0.05f
@@ -73,7 +85,6 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "squareBitcrushRate", "Bitcrush Rate",
             juce::NormalisableRange<float>(100.0f, 8000.0f, 1.0f), 10000.0f // Hz
         ),
-
         std::make_unique<juce::AudioParameterFloat>(
             "squareBitcrushDepth", "Bitcrush Depth",
             juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 16.0f // Bits
@@ -82,12 +93,11 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "barkFilterFreq", "Bark Freq",
             juce::NormalisableRange<float>(300.0f, 3000.0f, 1.0f), 800.0f
         ),
-
         std::make_unique<juce::AudioParameterFloat>(
             "barkFilterResonance", "Bark Res",
             juce::NormalisableRange<float>(0.1f, 2.0f, 0.01f), 1.0f
         ),
-
+        
             // === Triangle Params ===
         std::make_unique<juce::AudioParameterFloat>("triGlideTime", "Glide Time", 0.0f, 0.2f, 0.05f),
         std::make_unique<juce::AudioParameterFloat>(
@@ -192,6 +202,8 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     phase = 0.0;
     vibratoPhase = 0.0;
 
+    int waveformIndex = *parameters.getRawParameterValue("waveform");
+
     adsrParams.attack = *parameters.getRawParameterValue("attack");
     adsrParams.decay = *parameters.getRawParameterValue("decay");
     adsrParams.sustain = *parameters.getRawParameterValue("sustain");
@@ -200,9 +212,17 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     adsr.setSampleRate(currentSampleRate);
 
-    flutterAmount.reset(sampleRate, 0.01); // smoothing time
-    flutterCounter = 0;
-    flutterUpdateInterval = static_cast<int>(sampleRate / *parameters.getRawParameterValue("flutterRate"));
+    // ====== Prepare Sine ======
+    juce::dsp::ProcessSpec chrousSpec;
+    chrousSpec.sampleRate = sampleRate;
+    chrousSpec.maximumBlockSize = samplesPerBlock;
+    chrousSpec.numChannels = getTotalNumOutputChannels();
+
+    sineChorus.prepare(chrousSpec);
+    sineChorus.setMix(0.4f);
+    sineChorus.setCentreDelay(10.0f);
+    sineChorus.setFeedback(0.0f);
+
 
     juce::dsp::ProcessSpec sineSpec;
     sineSpec.sampleRate = currentSampleRate;
@@ -215,16 +235,23 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     sineFilter.setCutoffFrequency(1000.0f);
     sineFilter.setResonance(0.8f);
 
-    juce::dsp::ProcessSpec sawSpec;
-    sawSpec.sampleRate = sampleRate;
-    sawSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
-    sawSpec.numChannels = getTotalNumOutputChannels();
+    // ====== Prepare Saw ======
+    sawCombBuffer.setSize(getTotalNumOutputChannels(), static_cast<int>(sampleRate * 0.05)); // 50ms max
+    sawCombBuffer.clear();
+    sawCombWritePosition = 0;
 
-    sawFilter.prepare(sawSpec);
-    sawFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
-    sawFilter.setResonance(0.9f);
-    sawFilter.setCutoffFrequency(1200.0f); // Initial center
 
+
+    juce::dsp::ProcessSpec formantSpec;
+    formantSpec.sampleRate = sampleRate;
+    formantSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    formantSpec.numChannels = getTotalNumOutputChannels();
+
+    formantFilter.prepare(formantSpec);
+    formantFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+
+
+    // ====== Prepare Square ======
     juce::dsp::ProcessSpec barkSpec{
     sampleRate,
     static_cast<juce::uint32>(samplesPerBlock),
@@ -237,25 +264,15 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     barkFilter.setCutoffFrequency(800.0f);  // Default
     barkFilter.setResonance(1.0f);
 
-    sawDistortion.functionToUse = [](float x) {
-        return std::tanh(x * 3.0f); // Soft clipping / saturation
-        };
 
-    sawDistortion.prepare({
-        sampleRate,
-        static_cast<juce::uint32>(samplesPerBlock),
-        static_cast<juce::uint32>(getTotalNumOutputChannels())
-        });
-
-    int waveformIndex = *parameters.getRawParameterValue("waveform");
-
-    echoBuffer.setSize(getTotalNumOutputChannels(), (int)(getSampleRate() * 0.5)); // 500 ms max
+    // ====== Prepare Triangle ======
+    echoBuffer.setSize(getTotalNumOutputChannels(), (int)(getSampleRate() * 2)); // 500 ms max
     echoBuffer.clear();
     echoWritePosition = 0;
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     if (e != nullptr) {
-        e->animationPlaceholder.setNewAnimal(waveformIndex);
+        e->wildlifeCam.setNewAnimal(waveformIndex);
     }
 }
 
@@ -297,13 +314,14 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
     
 
     int currentWaveformIndex = *parameters.getRawParameterValue("waveform");
 
-    if (e != nullptr && currentWaveformIndex != e->animationPlaceholder.getIndex()) {
-        e->animationPlaceholder.setNewAnimal(currentWaveformIndex);
+    // Update Displayed animal when new Waveform has been chosen
+    if (e != nullptr && currentWaveformIndex != e->wildlifeCam.getIndex()) {
+        e->wildlifeCam.setNewAnimal(currentWaveformIndex);
     }
 
     buffer.clear();
@@ -315,6 +333,7 @@ void AnimalSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     adsr.setParameters(adsrParams);
 
+    // Execute waveform function based on choice
     switch (static_cast<WaveformType>(currentWaveformIndex))
     {
         case WaveformType::Sine: processSineWave(buffer, midiMessages); break;
@@ -357,20 +376,30 @@ void AnimalSynthAudioProcessor::setStateInformation (const void* data, int sizeI
 }
 
 //==============================================================================
-// This creates new instances of the plugin..
+// This creates new instances of the plugin.
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AnimalSynthAudioProcessor();
 }
 
+/**
+ * @brief Creates the "Howl" sound using a Sine Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     auto numSamples = buffer.getNumSamples();
     auto numChannels = buffer.getNumChannels();
 
-    // Read current vibrato settings
+    // Read current parameter settings
     vibratoRate = *parameters.getRawParameterValue("vibratoRate");
     vibratoDepth = *parameters.getRawParameterValue("vibratoDepth");
+
+    juce::dsp::AudioBlock<float> block(buffer);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    sineChorus.setRate(*parameters.getRawParameterValue("sineChorusRate"));
+    sineChorus.setDepth(*parameters.getRawParameterValue("sineChorusDepth"));
 
     float tremoloRate = *parameters.getRawParameterValue("tremoloRate");
     float tremoloDepth = *parameters.getRawParameterValue("tremoloDepth");
@@ -408,46 +437,32 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float env = adsr.getNextSample(); // ADSR envelope
+            float env = adsr.getNextSample();
             float currentSample = 0.0f;
+            // Update wildlifeCam
+            e->wildlifeCam.setEnvelopeLevel(env);
 
-            
-            e->animationPlaceholder.setEnvelopeLevel(env);
-
-            // Vibrato (LFO on frequency)
+            // === Vibrato ===
             float vibrato = std::sin(2.0 * juce::MathConstants<double>::pi * vibratoPhase) * vibratoDepth;
             vibratoPhase += vibratoRate / currentSampleRate;
             if (vibratoPhase >= 1.0)
                 vibratoPhase -= 1.0;
 
-            // Flutter update
-            if (++flutterCounter >= flutterUpdateInterval)
-            {
-                flutterCounter = 0;
-                float depth = *parameters.getRawParameterValue("flutterDepth");
-                float randomValue = juce::Random::getSystemRandom().nextFloat() * 2.0f - 1.0f;
-                flutterAmount.setTargetValue(randomValue * depth);
-            }
+            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato);
 
-            float flutter = flutterAmount.getNextValue();
-
-            // Phase increment with vibrato and flutter
-            double modulatedPhaseInc = phaseIncrement * (1.0 + vibrato + flutter);
-
-            // Amplitude modulation
+            // === Tremolo ===
             float tremolo = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * tremoloPhase) * tremoloDepth);
             tremoloPhase += tremoloRate / currentSampleRate;
             if (tremoloPhase >= 1.0f)
                 tremoloPhase -= 1.0f;
 
-
-            // Sine wave generation
+            // === Sine Generation ===
             float rawSine = std::sin(2.0 * juce::MathConstants<double>::pi * phase);
             phase += modulatedPhaseInc;
             if (phase >= 1.0)
                 phase -= 1.0;
 
-            // Filter envelope decay
+            // === Filter Envelope ===
             if (sinefilterEnvelope > 0.0f)
             {
                 sinefilterEnvelope -= sineFilterEnvIncrement;
@@ -455,16 +470,16 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
                     sinefilterEnvelope = 0.0f;
             }
 
-            // Modulate filter cutoff frequency
             float cutoff = 300.0f + sinefilterEnvelope * 4000.0f;
             sineFilter.setCutoffFrequency(cutoff);
+            float filtered = sineFilter.processSample(0, rawSine);
 
-            // Apply filter to sine wave
-            currentSample = sineFilter.processSample(0, rawSine) * env * tremolo;
+            currentSample = filtered * env * tremolo;
 
             for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
                 buffer.setSample(channel, sample, currentSample);
         }
+        sineChorus.process(context);
     }
     else
     {
@@ -473,29 +488,39 @@ void AnimalSynthAudioProcessor::processSineWave(juce::AudioBuffer<float>& buffer
     }
 }
 
+/**
+ * @brief Creates the "Growl" sound using a Saw Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    auto numSamples = buffer.getNumSamples();
-    auto numChannels = buffer.getNumChannels();
-    auto sampleRate = getSampleRate();
+    const int numSamples = buffer.getNumSamples();
+    const int numChannels = buffer.getNumChannels();
+    const double sampleRate = getSampleRate();
 
-    // === Handle MIDI ===
+    float combDelayMs = *parameters.getRawParameterValue("sawCombTime");
+    float combFeedback = *parameters.getRawParameterValue("sawCombFeedback");
+
+    float formantFreq = *parameters.getRawParameterValue("formantFreq");
+    float formantRes = *parameters.getRawParameterValue("formantResonance");
+
+    float drive = *parameters.getRawParameterValue("sawDrive");
+    float shape = *parameters.getRawParameterValue("sawShape");
+
+    int maxDelaySamples = sawCombBuffer.getNumSamples();
+    int delaySamples = static_cast<int>((combDelayMs / 1000.0f) * sampleRate);
+    delaySamples = std::clamp(delaySamples, 1, maxDelaySamples - 1);
+
     for (const auto metadata : midi)
     {
         const auto msg = metadata.getMessage();
-
         if (msg.isNoteOn())
         {
             midiNote = msg.getNoteNumber();
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
-
             phaseIncrement = freq / sampleRate;
-            //phase = 0.0;
             adsr.noteOn();
-
-            // Trigger filter envelope
-            sawFilterEnvelope = 1.0f;
-            sawFilterEnvIncrement = 1.0f / (sampleRate * 0.25f); // 250ms decay
         }
         else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
         {
@@ -503,64 +528,76 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
 
-    // === Synthesis loop ===
     if (adsr.isActive() && e != nullptr)
     {
-        float toneCutoff = *parameters.getRawParameterValue("sawDistortionTone");
-        sawPostFilter.setCutoffFrequency(toneCutoff);
-
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
-            e->animationPlaceholder.setEnvelopeLevel(env);
 
-            // Generate saw wave
+            e->wildlifeCam.setEnvelopeLevel(env);
+
             float rawSaw = 2.0f * static_cast<float>(phase) - 1.0f;
+            float shaped = rawSaw * env;
+
+            // === Formant Filter ===
+            if (formantRes > 0.0f)
+            {
+                formantFilter.setCutoffFrequency(formantFreq);
+                formantFilter.setResonance(formantRes);
+
+                float filtered = formantFilter.processSample(0, shaped);
+                shaped = filtered * env;
+            }
+
+            // === Waveshaping ===
+            float waveshaped = shaped;
+
+            if (drive > 0.9f)
+            {
+                float driven = shaped * drive;
+                float hard = juce::jlimit(-1.0f, 1.0f, driven);
+                float soft = std::tanh(driven);
+                waveshaped = juce::jmap(shape, hard, soft);
+            }
+
+            // === Comb Filter ===
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                float* delayData = sawCombBuffer.getWritePointer(ch);
+                float* output = buffer.getWritePointer(ch);
+
+                int readPos = (sawCombWritePosition + maxDelaySamples - delaySamples) % maxDelaySamples;
+                float delayed = delayData[readPos];
+
+                float processed = waveshaped + delayed * combFeedback;
+
+                output[sample] = processed;
+                delayData[sawCombWritePosition] = processed;
+            }
+
             phase += phaseIncrement;
             if (phase >= 1.0)
                 phase -= 1.0;
 
-            // Filter envelope decay
-            if (sawFilterEnvelope > 0.0f)
-            {
-                sawFilterEnvelope -= sawFilterEnvIncrement;
-                if (sawFilterEnvelope < 0.0f)
-                    sawFilterEnvelope = 0.0f;
-            }
-
-            // Pre-filter
-            float preCutoff = 600.0f + sawFilterEnvelope * 3000.0f;
-            sawFilter.setCutoffFrequency(preCutoff);
-            float filtered = sawFilter.processSample(0, rawSaw) * env;
-
-            // Distortion
-            float distortionAmount = *parameters.getRawParameterValue("sawDistortionAmount");
-            float distorted = std::tanh(filtered * distortionAmount);
-
-            // Post-filter (tone shaping)
-            float postFiltered = sawPostFilter.processSample(0, distorted);
-
-            // Amplitude modulation for growl
-            float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * amPhase) * amDepth);
-            amPhase += amRate / getSampleRate();
-            if (amPhase >= 1.0f)
-                amPhase -= 1.0f;
-
-            float finalSample = postFiltered * env * am;
-
-            for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-                buffer.setSample(channel, sample, finalSample);
+            sawCombWritePosition = (sawCombWritePosition + 1) % maxDelaySamples;
         }
     }
     else
     {
         buffer.clear();
+        sawCombBuffer.clear();
+        sawCombWritePosition = 0;
     }
-
 }
 
+
+/**
+ * @brief Creates the "Bark" sound using a Square Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     auto numSamples = buffer.getNumSamples();
@@ -580,7 +617,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             midiNote = msg.getNoteNumber();
             double freq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
             phaseIncrement = freq / sampleRate;
-            phase = 0.0;
+            //phase = 0.0;
             adsr.noteOn();
 
             squarePunchLevel = 1.0f;
@@ -589,9 +626,14 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             barkFilterEnvelope = 1.0f;
             barkFilterDecayRate = 1.0f / (sampleRate * 0.15f);
         }
+        else if (msg.isNoteOff())
+        {
+            if (msg.getNoteNumber() == midiNote)
+                adsr.noteOff();
+        }
     }
 
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
 
     // === Synthesis loop ===
     if (adsr.isActive() && e != nullptr)
@@ -599,10 +641,10 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
         for (int sample = 0; sample < numSamples; ++sample)
         {
             float env = adsr.getNextSample();
-            e->animationPlaceholder.setEnvelopeLevel(env);
+            e->wildlifeCam.setEnvelopeLevel(env);
             float rawSample = (phase < 0.5f) ? 1.0f : -1.0f;
 
-            // --- Punch Envelope ---
+            // === Punch Envelope ===
             if (squarePunchLevel > 0.0f)
             {
                 squarePunchLevel -= squarePunchDecayRate;
@@ -613,7 +655,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
 
             float currentSample = rawSample * env * punchEnv;
 
-            // --- Bitcrusher ---
+            // === Bitcrusher ===
             bool bitcrusherActive = crushDepth > 1.0f;
             if (bitcrusherActive)
             {
@@ -636,7 +678,7 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             }
 
 
-            // Bark filter envelope decay
+            // === Bark Filter Envelope ===
             if (barkFilterEnvelope > 0.0f)
             {
                 barkFilterEnvelope -= barkFilterDecayRate;
@@ -656,12 +698,10 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
             currentSample = barkFilter.processSample(0, currentSample);
 
 
-            // --- Phase update ---
             phase += phaseIncrement;
             if (phase >= 1.0)
                 phase -= 1.0;
 
-            // --- Output to buffer ---
             for (int channel = 0; channel < numChannels; ++channel)
                 buffer.setSample(channel, sample, currentSample);
         }
@@ -672,16 +712,28 @@ void AnimalSynthAudioProcessor::processSquareWave(juce::AudioBuffer<float>& buff
     }
 }
 
+
+/**
+ * @brief Creates the "Chirp" sound using a Triangle Wave and Effects
+ * @param buffer the audio buffer
+ * @param midi the midi buffer
+ */
 void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    auto numSamples = buffer.getNumSamples();
-    auto numChannels = buffer.getNumChannels();
-    auto sampleRate = getSampleRate();
+    const int numSamples   = buffer.getNumSamples();
+    const int numChannels  = buffer.getNumChannels();
+    const float sampleRate = getSampleRate();
 
-    float chirpRate = *parameters.getRawParameterValue("triChirpRate");
+    float chirpRate  = *parameters.getRawParameterValue("triChirpRate");
     float chirpDepth = *parameters.getRawParameterValue("triChirpDepth");
 
-    // === Handle MIDI ===
+    float echoTimeMs = *parameters.getRawParameterValue("triEchoTime");
+    float echoMix    = *parameters.getRawParameterValue("triEchoMix");
+
+    const int delaySamples     = static_cast<int>((echoTimeMs / 1000.0f) * sampleRate);
+    const int echoBufferLength = echoBuffer.getNumSamples();
+
+    // === MIDI handling ===
     for (const auto metadata : midi)
     {
         const auto msg = metadata.getMessage();
@@ -690,95 +742,85 @@ void AnimalSynthAudioProcessor::processTriangleWave(juce::AudioBuffer<float>& bu
         {
             midiNote = msg.getNoteNumber();
 
+            // === Pitch Glide ===
             double targetFreq = juce::MidiMessage::getMidiNoteInHertz(midiNote);
-            float glideDepth = *parameters.getRawParameterValue("triGlideDepth");
-            float glideTime = *parameters.getRawParameterValue("triGlideTime");
+            float glideDepth  = *parameters.getRawParameterValue("triGlideDepth");
+            float glideTime   = *parameters.getRawParameterValue("triGlideTime");
 
-            // Calculate start frequency a number of semitones below target
             double startFreq = targetFreq * std::pow(2.0, -glideDepth / 12.0);
 
-            glideStartFreq = startFreq;
-            glideTargetFreq = targetFreq;
-            glideCurrentFreq = startFreq;
+            glideStartFreq     = startFreq;
+            glideTargetFreq    = targetFreq;
+            glideCurrentFreq   = startFreq;
+            glideSamplesLeft   = static_cast<int>(glideTime * sampleRate);
+            glideStep          = (glideSamplesLeft > 0) ? (glideTargetFreq - glideStartFreq) / glideSamplesLeft : 0.0;
 
-            // Total samples to interpolate over
-            glideSamplesLeft = static_cast<int>(glideTime * getSampleRate());
-
-            if (glideSamplesLeft > 0)
-                glideStep = (glideTargetFreq - glideStartFreq) / glideSamplesLeft;
-            else
-                glideStep = 0.0;
-
-            //phase = 0.0;
             adsr.noteOn();
         }
-    }
-
-    AnimalSynthAudioProcessorEditor* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
-
-    // === Synthesis loop ===
-    if (adsr.isActive() && e != nullptr)
-    {
-        float echoTimeMs = *parameters.getRawParameterValue("triEchoTime");
-        float echoMix = *parameters.getRawParameterValue("triEchoMix");
-
-        int delaySamples = static_cast<int>((echoTimeMs / 1000.0f) * sampleRate);
-        int echoBufferLength = echoBuffer.getNumSamples();
-
-        for (int sample = 0; sample < numSamples; ++sample)
+        else if (msg.isNoteOff() && msg.getNoteNumber() == midiNote)
         {
-            float env = adsr.getNextSample();
-            e->animationPlaceholder.setEnvelopeLevel(env);
-
-            // Glide update
-            if (glideSamplesLeft > 0)
-            {
-                glideCurrentFreq += glideStep;
-                --glideSamplesLeft;
-            }
-            else
-            {
-                glideCurrentFreq = glideTargetFreq;
-            }
-
-            phaseIncrement = glideCurrentFreq / sampleRate;
-
-            float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
-
-            // Chirp (AM)
-            float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * chirpPhase) * chirpDepth);
-            chirpPhase += chirpRate / sampleRate;
-            if (chirpPhase >= 1.0f)
-                chirpPhase -= 1.0f;
-
-            float drySample = rawSample * env * am;
-
-            // Echo
-            for (int channel = 0; channel < numChannels; ++channel)
-            {
-                auto* echoData = echoBuffer.getWritePointer(channel);
-                int readPos = (echoWritePosition + echoBufferLength - delaySamples) % echoBufferLength;
-
-                float delayedSample = echoData[readPos];
-                float wetSample = (1.0f - echoMix) * drySample + echoMix * delayedSample;
-
-                // Write dry + feedback into echo buffer
-                echoData[echoWritePosition] = drySample + delayedSample * 0.4f; // feedback = 0.4
-
-                // Output mixed sample
-                buffer.setSample(channel, sample, wetSample);
-            }
-
-            // Update phase and delay write head
-            phase += phaseIncrement;
-            if (phase >= 1.0f)
-                phase -= 1.0f;
-
-            echoWritePosition = (echoWritePosition + 1) % echoBufferLength;
+            adsr.noteOff();
         }
     }
-    else
+
+    auto* e = dynamic_cast<AnimalSynthAudioProcessorEditor*>(getActiveEditor());
+
+    if (!adsr.isActive())
     {
         buffer.clear();
+        echoBuffer.clear();
+        echoWritePosition = 0;
+        return;
+    }
+
+    for (int sample = 0; sample < numSamples; ++sample)
+    {
+        float env = adsr.getNextSample();
+        if (e != nullptr) e->wildlifeCam.setEnvelopeLevel(env);
+
+        // === Glide Update ===
+        if (glideSamplesLeft > 0)
+        {
+            glideCurrentFreq += glideStep;
+            --glideSamplesLeft;
+        }
+        else
+        {
+            glideCurrentFreq = glideTargetFreq;
+        }
+
+        // === Triangle oscillator ===
+        phaseIncrement = glideCurrentFreq / sampleRate;
+        float rawSample = static_cast<float>(4.0 * std::abs(phase - 0.5) - 1.0);
+
+        // === Chirp (AM) ===
+        float am = 1.0f - (std::sin(2.0f * juce::MathConstants<float>::pi * chirpPhase) * chirpDepth);
+        chirpPhase += chirpRate / sampleRate;
+        if (chirpPhase >= 1.0f) chirpPhase -= 1.0f;
+
+        float drySample = rawSample * env * am;
+
+        // === Echo with fade-out based on ADSR ===
+        float echoFade = juce::jlimit(0.0f, 1.0f, env); // 0 when envelope is silent, 1 at peak
+
+        for (int channel = 0; channel < numChannels; ++channel)
+        {
+            float* echoData = echoBuffer.getWritePointer(channel);
+            int readPos     = (echoWritePosition + echoBufferLength - delaySamples) % echoBufferLength;
+
+            float delayedSample = echoData[readPos] * echoFade;
+            float wetSample     = (1.0f - echoMix) * drySample + echoMix * delayedSample;
+
+            float feedback = delayedSample * 0.4f * env;
+
+            echoData[echoWritePosition] = drySample + feedback;
+
+            buffer.setSample(channel, sample, wetSample);
+        }
+
+        phase += phaseIncrement;
+        if (phase >= 1.0) phase -= 1.0;
+
+        echoWritePosition = (echoWritePosition + 1) % echoBufferLength;
     }
 }
