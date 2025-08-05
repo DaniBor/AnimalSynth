@@ -77,21 +77,19 @@ private:
 
 
     // ===== Saw Panel Elements =====
-    juce::Slider sawDistortionAmountSlider, sawDistortionToneSlider;
-    juce::Label sawDistortionAmountLabel, sawDistortionToneLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDistortionAmountAttachment, sawDistortionToneAttachment;
+    juce::Slider sawCombTimeSlider, sawCombFeedbackSlider;
+    juce::Label  sawCombTimeLabel, sawCombFeedbackLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombTimeAttachment, sawCombFeedbackAttachment;
 
-    juce::Slider sawSweepRateSlider, sawSweepDepthSlider;
-    juce::Label  sawSweepRateLabel, sawSweepDepthLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawSweepRateAttachment, sawSweepDepthAttachment;
+    juce::Slider formantFreqSlider, formantResSlider;
+    juce::Label formantFreqLabel, formantResLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> formantFreqAttachment, formantResAttachment;
 
-    juce::Slider sawCombTimeSlider;
-    juce::Label  sawCombTimeLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombTimeAttachment;
+    juce::Slider sawDriveSlider, sawShapeSlider;
+    juce::Label sawDriveLabel, sawShapeLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawDriveAttachment, sawShapeAttachment;
 
-    juce::Slider sawCombFeedbackSlider;
-    juce::Label  sawCombFeedbackLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sawCombFeedbackAttachment;
+
 
 
 

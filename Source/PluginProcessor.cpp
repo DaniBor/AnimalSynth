@@ -55,6 +55,22 @@ AnimalSynthAudioProcessor::AnimalSynthAudioProcessor()
             "sawCombFeedback", "Comb Feedback",
             juce::NormalisableRange<float>(0.0f, 0.70f, 0.01f), 0.25f
         ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "formantFreq", "Formant Frequency",
+            juce::NormalisableRange<float>(200.0f, 2000.0f, 1.0f), 800.0f
+            ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "formantResonance", "Formant Resonance",
+            juce::NormalisableRange<float>(0.0f, 2.5f, 0.01f), 1.0f
+            ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawDrive", "Drive",
+            juce::NormalisableRange<float>(0.9f, 10.0f, 0.1f), 3.0f
+            ),
+        std::make_unique<juce::AudioParameterFloat>(
+            "sawShape", "Shape",
+            juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f
+            ),
 
             // === Square Params ===
         std::make_unique<juce::AudioParameterFloat>(
@@ -218,6 +234,17 @@ void AnimalSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     sawCombBuffer.setSize(getTotalNumOutputChannels(), static_cast<int>(sampleRate * 0.05)); // 50ms max
     sawCombBuffer.clear();
     sawCombWritePosition = 0;
+
+
+
+    juce::dsp::ProcessSpec formantSpec;
+    formantSpec.sampleRate = sampleRate;
+    formantSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    formantSpec.numChannels = getTotalNumOutputChannels();
+
+    formantFilter.prepare(formantSpec);
+    formantFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+
 
     // ====== Prepare Square ======
     juce::dsp::ProcessSpec barkSpec{
@@ -467,6 +494,12 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
     float combDelayMs = *parameters.getRawParameterValue("sawCombTime");
     float combFeedback = *parameters.getRawParameterValue("sawCombFeedback");
 
+    float formantFreq = *parameters.getRawParameterValue("formantFreq");
+    float formantRes = *parameters.getRawParameterValue("formantResonance");
+
+    float drive = *parameters.getRawParameterValue("sawDrive");
+    float shape = *parameters.getRawParameterValue("sawShape");
+
     int maxDelaySamples = sawCombBuffer.getNumSamples();
     int delaySamples = static_cast<int>((combDelayMs / 1000.0f) * sampleRate);
     delaySamples = std::clamp(delaySamples, 1, maxDelaySamples - 1);
@@ -494,7 +527,28 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
             float env = adsr.getNextSample();
 
             float rawSaw = 2.0f * static_cast<float>(phase) - 1.0f;
-            float currentSample = rawSaw * env;
+            float shaped = rawSaw * env;
+
+            // === Formant Filter ===
+            if (formantRes > 0.0f)
+            {
+                formantFilter.setCutoffFrequency(formantFreq);
+                formantFilter.setResonance(formantRes);
+
+                float filtered = formantFilter.processSample(0, shaped);
+                shaped = filtered * env;
+            }
+
+            // === Waveshaping ===
+            float waveshaped = shaped;
+
+            if (drive > 0.9f)
+            {
+                float driven = shaped * drive;
+                float hard = juce::jlimit(-1.0f, 1.0f, driven);
+                float soft = std::tanh(driven);
+                waveshaped = juce::jmap(shape, hard, soft);
+            }
 
             for (int ch = 0; ch < numChannels; ++ch)
             {
@@ -504,10 +558,9 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
                 int readPos = (sawCombWritePosition + maxDelaySamples - delaySamples) % maxDelaySamples;
                 float delayed = delayData[readPos];
 
-                float processed = currentSample + delayed * combFeedback;
+                float processed = waveshaped + delayed * combFeedback;
 
                 output[sample] = processed;
-
                 delayData[sawCombWritePosition] = processed;
             }
 
@@ -525,6 +578,9 @@ void AnimalSynthAudioProcessor::processSawWave(juce::AudioBuffer<float>& buffer,
         sawCombWritePosition = 0;
     }
 }
+
+
+
 
 
 

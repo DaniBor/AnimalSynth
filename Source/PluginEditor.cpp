@@ -85,9 +85,20 @@ AnimalSynthAudioProcessorEditor::AnimalSynthAudioProcessorEditor (AnimalSynthAud
 
     polyMalButton.setText("PolyMal");
     addAndMakeVisible(polyMalButton);
-    
 
-    
+    // Saw Shape text display — show "Off" if drive is OFF
+    sawShapeSlider.textFromValueFunction = [this](double value) {
+        return (sawDriveSlider.getValue() <= 0.9) ? juce::String("Off") : juce::String(value, 1);
+    };
+
+    // Saw Drive text display
+    sawDriveSlider.textFromValueFunction = [](double value) {
+        return (value <= 0.9) ? juce::String("Off") : juce::String(value, 1);
+    };
+    sawDriveSlider.onValueChange = [this]() {
+        sawShapeSlider.setTextValueSuffix(""); // optional, reset suffix
+        sawShapeSlider.updateText();           // force update display
+    };
 
     
     audioProcessor.pushAudioToScope = [this](const juce::AudioBuffer<float>& b)
@@ -179,6 +190,13 @@ void AnimalSynthAudioProcessorEditor::resized()
     // === Saw Sliders ===
     sawCombTimeSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
     sawCombFeedbackSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 1, yPos, fxSliderSize, fxSliderSize);
+
+    formantFreqSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 2, yPos, fxSliderSize, fxSliderSize);
+    formantResSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 3, yPos, fxSliderSize, fxSliderSize);
+
+    sawDriveSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 4, yPos, fxSliderSize, fxSliderSize);
+    sawShapeSlider.setBounds(10 + (sliderPadding + fxSliderSize) * 5, yPos, fxSliderSize, fxSliderSize);
+
 
     // === Square Sliders ===
     squarePunchAmountSlider.setBounds(10, yPos, fxSliderSize, fxSliderSize);
@@ -316,6 +334,48 @@ void AnimalSynthAudioProcessorEditor::setupEffectPanels()
     sawCombFeedbackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "sawCombFeedback", sawCombFeedbackSlider);
 
+    formantFreqSlider.setSliderStyle(juce::Slider::Rotary);
+    formantFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    formantFreqLabel.setText("Formant Freq", juce::dontSendNotification);
+    formantFreqLabel.attachToComponent(&formantFreqSlider, false);
+    sawFXPanel.addAndMakeVisible(formantFreqSlider);
+    sawFXPanel.addAndMakeVisible(formantResSlider);
+
+
+    formantResSlider.setSliderStyle(juce::Slider::Rotary);
+    formantResSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    formantResLabel.setText("Formant Res", juce::dontSendNotification);
+    formantResLabel.attachToComponent(&formantResSlider, false);
+    sawFXPanel.addAndMakeVisible(formantFreqLabel);
+    sawFXPanel.addAndMakeVisible(formantResLabel);
+
+    formantFreqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "formantFreq", formantFreqSlider);
+
+    formantResAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "formantResonance", formantResSlider);
+
+    // === Saw Drive ===
+    sawDriveSlider.setSliderStyle(juce::Slider::Rotary);
+    sawDriveSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawDriveLabel.setText("Drive", juce::dontSendNotification);
+    sawDriveLabel.attachToComponent(&sawDriveSlider, false);
+    sawFXPanel.addAndMakeVisible(sawDriveSlider);
+    sawFXPanel.addAndMakeVisible(sawDriveLabel);
+
+    sawDriveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+            audioProcessor.parameters, "sawDrive", sawDriveSlider);
+
+    // === Saw Shape ===
+    sawShapeSlider.setSliderStyle(juce::Slider::Rotary);
+    sawShapeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    sawShapeLabel.setText("Shape", juce::dontSendNotification);
+    sawShapeLabel.attachToComponent(&sawShapeSlider, false);
+    sawFXPanel.addAndMakeVisible(sawShapeSlider);
+    sawFXPanel.addAndMakeVisible(sawShapeLabel);
+
+    sawShapeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sawShape", sawShapeSlider);
 
 
     // ===== Square Panel =====

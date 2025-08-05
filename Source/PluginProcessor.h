@@ -106,8 +106,12 @@ private:
     float tremoloPhase = 0.0f;
 
     // === Saw Filter and FX ===
+    // Comb filter
     juce::AudioBuffer<float> sawCombBuffer;
     int sawCombWritePosition = 0;
+
+
+    juce::dsp::StateVariableTPTFilter<float> formantFilter;
 
 
     // === Square Filter and FX ===
